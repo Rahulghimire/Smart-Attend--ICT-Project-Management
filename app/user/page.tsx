@@ -150,98 +150,159 @@ export default function App() {
     message.success('Attendance submitted successfully!');
   };
 
-  // QR Scanner Logic – FIXED VERSION
+  // QR Scanner Logic
+  // useEffect(() => {
+  //   if (activeKey !== 'scan-qr') return;
+
+  //   const onScanSuccess = (decodedText: string) => {
+  //     try {
+  //       const data = JSON.parse(decodedText);
+  //       if (!data.course || !data.subject) {
+  //         message.error('Invalid QR code: missing course or subject');
+  //         return;
+  //       }
+
+  //       const fullSubjectName =
+  //         subjectsByCourse[data.course]?.find((s) => s.code === data.subject)
+  //           ?.name || data.subject;
+
+  //       const newEntry: AttendanceEntry = {
+  //         key: attendanceData.length + 1,
+  //         date: new Date().toISOString().split('T')[0],
+  //         subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+  //         status: 'Present',
+  //         method: 'QR Scan',
+  //       };
+
+  //       setAttendanceData([newEntry, ...attendanceData]);
+  //       setScanResult('success');
+  //       message.success(`Attendance marked for ${data.subject}! ✅`);
+
+  //       // Stop scanner after successful scan
+  //       scannerRef.current?.pause();
+  //     } catch (err) {
+  //       message.error('Invalid QR code format');
+  //     }
+  //   };
+
+  //   const onScanError = (err: string) => {
+  //     // Suppress noisy errors
+  //     console.warn(err);
+  //   };
+
+  //   scannerRef.current = new Html5QrcodeScanner(
+  //     'qr-reader',
+  //     {
+  //       fps: 10,
+  //       qrbox: { width: 300, height: 300 },
+  //       supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+  //       aspectRatio: 1,
+  //     },
+  //     false
+  //   );
+
+  //   scannerRef.current.render(onScanSuccess, onScanError);
+
+  //   return () => {
+  //     if (scannerRef.current) {
+  //       scannerRef.current.clear().catch((error) => {
+  //         console.warn('Failed to clear scanner', error);
+  //       });
+  //     }
+  //   };
+  // }, [activeKey, attendanceData]);
+
+
   useEffect(() => {
-    if (activeKey !== 'scan-qr') {
-      // Clean up if we leave this tab
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.warn);
-        scannerRef.current = null;
-      }
+  if (activeKey !== 'scan-qr') {
+    // Cleanup when leaving scan tab
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(console.warn);
+      scannerRef.current = null;
+    }
+    return;
+  }
+
+  // Give React time to mount #qr-reader
+  const timer = setTimeout(() => {
+    const readerElement = document.getElementById('qr-reader');
+    if (!readerElement) {
+      console.warn('qr-reader element not found');
       return;
     }
 
-    // Important: give React time to mount the <div id="qr-reader">
-    const timer = setTimeout(() => {
-      if (!document.getElementById('qr-reader')) {
-        console.warn('qr-reader element still not found after timeout');
-        return;
-      }
+    const onScanSuccess = (decodedText: string) => {
+      try {
+        const data = JSON.parse(decodedText);
 
-      const onScanSuccess = (decodedText: string) => {
-        try {
-          const data = JSON.parse(decodedText);
-          if (!data.course || !data.subject) {
-            message.error('Invalid QR code: missing course or subject');
-            return;
-          }
-
-          const fullSubjectName =
-            subjectsByCourse[data.course]?.find((s) => s.code === data.subject)
-              ?.name || data.subject;
-
-          const newEntry: AttendanceEntry = {
-            key: attendanceData.length + 1,
-            date: new Date().toISOString().split('T')[0],
-            subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
-            status: 'Present',
-            method: 'QR Scan',
-          };
-
-          setAttendanceData([newEntry, ...attendanceData]);
-          setScanResult('success');
-          message.success(`Attendance marked for ${data.subject}! ✅`);
-
-          // Optional: stop after first successful scan
-          scannerRef.current?.pause();
-        } catch (err) {
-          message.error('Invalid QR code format');
+        if (!data.course || !data.subject) {
+          message.error('Invalid QR code: missing course or subject');
+          return;
         }
-      };
 
-      const onScanError = (err: string) => {
-        // Usually too noisy — keep silent or log minimally
-        // console.warn(err);
-      };
+        const fullSubjectName =
+          subjectsByCourse[data.course]?.find(
+            (s) => s.code === data.subject
+          )?.name || data.subject;
 
-      scannerRef.current = new Html5QrcodeScanner(
-        'qr-reader',
-        {
-          fps: 10,
-          qrbox: { width: 300, height: 300 },
-          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-          aspectRatio: 1,
-        },
-        false // verbose = false
-      );
+        const newEntry: AttendanceEntry = {
+          key: attendanceData.length + 1,
+          date: new Date().toISOString().split('T')[0],
+          subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+          status: 'Present',
+          method: 'QR Scan',
+        };
 
-      scannerRef.current.render(onScanSuccess, onScanError);
-    }, 100); // 0–150 ms is usually enough
+        setAttendanceData((prev) => [newEntry, ...prev]);
+        setScanResult('success');
+        message.success(`Attendance marked for ${data.subject}! ✅`);
 
-    return () => {
-      clearTimeout(timer);
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.warn);
-        scannerRef.current = null;
+        // Stop camera after successful scan
+        scannerRef.current?.pause();
+      } catch {
+        message.error('Invalid QR code format');
       }
     };
-  }, [activeKey, attendanceData]); 
+
+    const onScanError = () => {
+      // Ignore noisy scan errors
+    };
+
+    scannerRef.current = new Html5QrcodeScanner(
+      'qr-reader',
+      {
+        fps: 10,
+        qrbox: { width: 300, height: 300 },
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        aspectRatio: 1,
+      },
+      false
+    );
+
+    scannerRef.current.render(onScanSuccess, onScanError);
+  }, 100);
+
+  return () => {
+    clearTimeout(timer);
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(console.warn);
+      scannerRef.current = null;
+    }
+  };
+}, [activeKey, attendanceData]);
+
 
   const handleRescan = () => {
     setScanResult(null);
-    if (scannerRef.current) {
-      scannerRef.current.resume();
-    }
+    scannerRef.current?.resume();
   };
 
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header className="bg-gradient-to-r from-indigo-700 to-blue-800 shadow-lg border-b-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4">
-          <div
-            className="flex items-center space-x-4"
-            onClick={() => setActiveKey('home')}
-            style={{ cursor: 'pointer' }}
+          <div className="flex items-center space-x-4"
+          onClick={()=>setActiveKey('home')} style={{cursor: 'pointer'}}
           >
             <QrCode className="w-10 h-10 text-white" />
             <Title level={3} className="!text-white mt-3 mb-0 !text-2xl font-bold">
@@ -260,7 +321,6 @@ export default function App() {
       </Header>
 
       <Content className="max-w-7xl mx-auto p-6 md:p-8">
-        {/* ────────────────────────────────────────────── */}
         {/* Home Section */}
         {activeKey === 'home' && (
           <>
@@ -278,7 +338,30 @@ export default function App() {
                   <CheckCircle className="w-20 h-20 opacity-80" />
                 </div>
               </Card>
-              {/* ... other cards ... */}
+              <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Text className="text-white text-5xl font-bold">4/5</Text>
+                    <Title level={4} className="text-white mb-0 !text-xl">
+                      Classes Today
+                    </Title>
+                  </div>
+                  <Users className="w-20 h-20 opacity-80" />
+                </div>
+              </Card>
+              <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Text className="text-white text-5xl font-bold">
+                      {attendanceData.length}
+                    </Text>
+                    <Title level={4} className="text-white mb-0 !text-xl">
+                      Total Sessions
+                    </Title>
+                  </div>
+                  <FileText className="w-20 h-20 opacity-80" />
+                </div>
+              </Card>
             </div>
             <Card className="shadow-2xl bg-white/90 backdrop-blur-lg rounded-2xl border-0">
               <Title level={2} className="text-center text-indigo-800 mb-6">
@@ -293,7 +376,7 @@ export default function App() {
           </>
         )}
 
-        {/* Scan QR Code Section – this is where #qr-reader lives */}
+        {/* Scan QR Code Section */}
         {activeKey === 'scan-qr' && (
           <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-8">
             <Title level={2} className="text-center text-indigo-800 mb-6">
@@ -330,8 +413,123 @@ export default function App() {
           </Card>
         )}
 
-        {/* ... rest of your tabs (qr-attendance, take, history) remain unchanged ... */}
+        {activeKey === 'qr-attendance' && (
+          <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+            <Title level={2} className="text-indigo-800 mb-2 text-center">
+              Generate QR for Attendance
+            </Title>
+            <div className="mb-6 flex justify-center">
+              {qrValue ? (
+                <QRCodeCanvas value={qrValue} size={200} level="H" />
+              ) : (
+                <QrCode className="w-32 h-32 text-indigo-600 mx-auto" />
+              )}
+            </div>
+            <Form layout="vertical">
+              <Form.Item label="Course">
+                <Select
+                  placeholder="Choose your course"
+                  size="large"
+                  onChange={(value) => {
+                    setSelectedCourse(value);
+                    setSelectedSubject(null);
+                  }}
+                >
+                  {courses.map((c) => (
+                    <Select.Option key={c.code} value={c.code}>
+                      {c.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item label="Subject">
+                <Select
+                  placeholder={
+                    selectedCourse ? 'Choose subject' : 'Select course first'
+                  }
+                  size="large"
+                  disabled={!selectedCourse}
+                  onChange={(value) => setSelectedSubject(value)}
+                >
+                  {selectedCourse &&
+                    subjectsByCourse[selectedCourse]?.map((s) => (
+                      <Select.Option key={s.code} value={s.code}>
+                        {s.code} - {s.name}
+                      </Select.Option>
+                    ))}
+                </Select>
+              </Form.Item>
+              {qrValue && (
+                <div className="mt-4 text-center">
+                  <Text strong className="text-green-600">
+                    QR Generated Successfully ✅
+                  </Text>
+                </div>
+              )}
+            </Form>
+          </Card>
+        )}
 
+        {activeKey === 'take' && (
+          <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+            <Title level={2} className="text-indigo-800 mb-2 text-center">
+              Manual Attendance
+            </Title>
+            <Form layout="vertical">
+              <Form.Item label="Course">
+                <Select
+                  placeholder="Choose your course"
+                  size="large"
+                  onChange={(value) => {
+                    setSelectedCourse(value);
+                    setSelectedSubject(null);
+                  }}
+                >
+                  {courses.map((c) => (
+                    <Select.Option key={c.code} value={c.code}>
+                      {c.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item label="Subject">
+                <Select
+                  placeholder={
+                    selectedCourse ? 'Choose subject' : 'Select course first'
+                  }
+                  size="large"
+                  disabled={!selectedCourse}
+                  onChange={(value) => setSelectedSubject(value)}
+                >
+                  {selectedCourse &&
+                    subjectsByCourse[selectedCourse]?.map((s) => (
+                      <Select.Option key={s.code} value={s.code}>
+                        {s.code} - {s.name}
+                      </Select.Option>
+                    ))}
+                </Select>
+              </Form.Item>
+              <div className="flex justify-center">
+                <Button type="primary" size="large" onClick={handleSubmitAttendance}>
+                  Mark Present
+                </Button>
+              </div>
+            </Form>
+          </Card>
+        )}
+
+        {activeKey === 'history' && (
+          <Card className="shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+            <Title level={2} className="text-indigo-800 mb-4">
+              Attendance History
+            </Title>
+            <Table
+              columns={columns}
+              dataSource={attendanceData}
+              pagination={{ pageSize: 10 }}
+            />
+          </Card>
+        )}
       </Content>
 
       <Footer className="text-center bg-gradient-to-r from-indigo-900 to-blue-900 text-white py-10">
