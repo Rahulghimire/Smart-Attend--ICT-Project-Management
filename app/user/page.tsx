@@ -231,38 +231,101 @@ export default function App() {
       return;
     }
 
-    const onScanSuccess = (decodedText: string) => {
-      try {
-        const data = JSON.parse(decodedText);
+    // const onScanSuccess = (decodedText: string) => {
+    //   try {
+    //     const data = JSON.parse(decodedText);
 
-        if (!data.course || !data.subject) {
-          message.error('Invalid QR code: missing course or subject');
-          return;
-        }
+    //     if (!data.course || !data.subject) {
+    //       message.error('Invalid QR code: missing course or subject');
+    //       return;
+    //     }
 
-        const fullSubjectName =
-          subjectsByCourse[data.course]?.find(
-            (s) => s.code === data.subject
-          )?.name || data.subject;
+    //     const fullSubjectName =
+    //       subjectsByCourse[data.course]?.find(
+    //         (s) => s.code === data.subject
+    //       )?.name || data.subject;
 
-        const newEntry: AttendanceEntry = {
-          key: attendanceData.length + 1,
-          date: new Date().toISOString().split('T')[0],
-          subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
-          status: 'Present',
-          method: 'QR Scan',
-        };
+    //     const newEntry: AttendanceEntry = {
+    //       key: attendanceData.length + 1,
+    //       date: new Date().toISOString().split('T')[0],
+    //       subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+    //       status: 'Present',
+    //       method: 'QR Scan',
+    //     };
 
-        setAttendanceData((prev) => [newEntry, ...prev]);
-        setScanResult('success');
-        message.success(`Attendance marked for ${data.subject}! ✅`);
+    //     setAttendanceData((prev) => [newEntry, ...prev]);
+    //     setScanResult('success');
+    //     message.success(`Attendance marked for ${data.subject}! ✅`);
 
-        // Stop camera after successful scan
-        scannerRef.current?.pause();
-      } catch {
-        message.error('Invalid QR code format');
-      }
+    //     // Stop camera after successful scan
+    //     scannerRef.current?.pause();
+    //   } catch {
+    //     message.error('Invalid QR code format');
+    //   }
+    // };
+
+    const onScanSuccess = async (decodedText: string) => {
+  try {
+    const data = JSON.parse(decodedText);
+
+    if (!data.course || !data.subject) {
+      message.error('Invalid QR code: missing course or subject');
+      return;
+    }
+
+    const fullSubjectName =
+      subjectsByCourse[data.course]?.find((s) => s.code === data.subject)?.name ||
+      data.subject;
+
+    // 1. Prepare the data you want to send to backend
+    const payload = {
+      date: new Date().toISOString().split('T')[0],
+      subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+      status: 'Present',
+      method: 'QR Scan',
+      // You can add more fields if your backend expects them:
+      // course: data.course,
+      // subjectCode: data.subject,
+      // studentId: "some-student-id-from-context-or-auth",
+      // scannedAt: new Date().toISOString(),
     };
+
+    const response = await fetch('/api/attendance', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    // 3. Handle response from server
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.error || `Server responded with ${response.status}`);
+    }
+
+    const savedRecord = await response.json(); // ← this has the server-created record (with id, createdAt, etc.)
+
+    // 4. Update local UI state with the confirmed saved data
+    setAttendanceData((prev) => [
+      {
+        ...savedRecord,
+        key: prev.length + 1,           // maintain your local key if needed
+      },
+      ...prev,
+    ]);
+
+    setScanResult('success');
+    message.success(`Attendance marked for ${data.subject}! ✅`);
+
+    // Stop camera
+    scannerRef.current?.pause();
+  } catch (err) {
+    console.error('Failed to save attendance:', err);
+    message.error('Could not save attendance – try again');
+    // Optional: keep scanner running or show retry button
+  }
+};
 
     const onScanError = () => {
       // Ignore noisy scan errors
