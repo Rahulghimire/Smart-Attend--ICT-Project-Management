@@ -151,43 +151,184 @@ export default function App() {
   };
 
   // QR Scanner Logic
+  // useEffect(() => {
+  //   if (activeKey !== 'scan-qr') return;
+
+  //   const onScanSuccess = (decodedText: string) => {
+  //     try {
+  //       const data = JSON.parse(decodedText);
+  //       if (!data.course || !data.subject) {
+  //         message.error('Invalid QR code: missing course or subject');
+  //         return;
+  //       }
+
+  //       const fullSubjectName =
+  //         subjectsByCourse[data.course]?.find((s) => s.code === data.subject)
+  //           ?.name || data.subject;
+
+  //       const newEntry: AttendanceEntry = {
+  //         key: attendanceData.length + 1,
+  //         date: new Date().toISOString().split('T')[0],
+  //         subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+  //         status: 'Present',
+  //         method: 'QR Scan',
+  //       };
+
+  //       setAttendanceData([newEntry, ...attendanceData]);
+  //       setScanResult('success');
+  //       message.success(`Attendance marked for ${data.subject}! ✅`);
+
+  //       // Stop scanner after successful scan
+  //       scannerRef.current?.pause();
+  //     } catch (err) {
+  //       message.error('Invalid QR code format');
+  //     }
+  //   };
+
+  //   const onScanError = (err: string) => {
+  //     // Suppress noisy errors
+  //     console.warn(err);
+  //   };
+
+  //   scannerRef.current = new Html5QrcodeScanner(
+  //     'qr-reader',
+  //     {
+  //       fps: 10,
+  //       qrbox: { width: 300, height: 300 },
+  //       supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+  //       aspectRatio: 1,
+  //     },
+  //     false
+  //   );
+
+  //   scannerRef.current.render(onScanSuccess, onScanError);
+
+  //   return () => {
+  //     if (scannerRef.current) {
+  //       scannerRef.current.clear().catch((error) => {
+  //         console.warn('Failed to clear scanner', error);
+  //       });
+  //     }
+  //   };
+  // }, [activeKey, attendanceData]);
+
+
   useEffect(() => {
-    if (activeKey !== 'scan-qr') return;
+  if (activeKey !== 'scan-qr') {
+    // Cleanup when leaving scan tab
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(console.warn);
+      scannerRef.current = null;
+    }
+    return;
+  }
 
-    const onScanSuccess = (decodedText: string) => {
-      try {
-        const data = JSON.parse(decodedText);
-        if (!data.course || !data.subject) {
-          message.error('Invalid QR code: missing course or subject');
-          return;
-        }
+  // Give React time to mount #qr-reader
+  const timer = setTimeout(() => {
+    const readerElement = document.getElementById('qr-reader');
+    if (!readerElement) {
+      console.warn('qr-reader element not found');
+      return;
+    }
 
-        const fullSubjectName =
-          subjectsByCourse[data.course]?.find((s) => s.code === data.subject)
-            ?.name || data.subject;
+    // const onScanSuccess = (decodedText: string) => {
+    //   try {
+    //     const data = JSON.parse(decodedText);
 
-        const newEntry: AttendanceEntry = {
-          key: attendanceData.length + 1,
-          date: new Date().toISOString().split('T')[0],
-          subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
-          status: 'Present',
-          method: 'QR Scan',
-        };
+    //     if (!data.course || !data.subject) {
+    //       message.error('Invalid QR code: missing course or subject');
+    //       return;
+    //     }
 
-        setAttendanceData([newEntry, ...attendanceData]);
-        setScanResult('success');
-        message.success(`Attendance marked for ${data.subject}! ✅`);
+    //     const fullSubjectName =
+    //       subjectsByCourse[data.course]?.find(
+    //         (s) => s.code === data.subject
+    //       )?.name || data.subject;
 
-        // Stop scanner after successful scan
-        scannerRef.current?.pause();
-      } catch (err) {
-        message.error('Invalid QR code format');
-      }
+    //     const newEntry: AttendanceEntry = {
+    //       key: attendanceData.length + 1,
+    //       date: new Date().toISOString().split('T')[0],
+    //       subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+    //       status: 'Present',
+    //       method: 'QR Scan',
+    //     };
+
+    //     setAttendanceData((prev) => [newEntry, ...prev]);
+    //     setScanResult('success');
+    //     message.success(`Attendance marked for ${data.subject}! ✅`);
+
+    //     // Stop camera after successful scan
+    //     scannerRef.current?.pause();
+    //   } catch {
+    //     message.error('Invalid QR code format');
+    //   }
+    // };
+
+    const onScanSuccess = async (decodedText: string) => {
+  try {
+    const data = JSON.parse(decodedText);
+
+    if (!data.course || !data.subject) {
+      message.error('Invalid QR code: missing course or subject');
+      return;
+    }
+
+    const fullSubjectName =
+      subjectsByCourse[data.course]?.find((s) => s.code === data.subject)?.name ||
+      data.subject;
+
+    // 1. Prepare the data you want to send to backend
+    const payload = {
+      date: new Date().toISOString().split('T')[0],
+      subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+      status: 'Present',
+      method: 'QR Scan',
+      // You can add more fields if your backend expects them:
+      // course: data.course,
+      // subjectCode: data.subject,
+      // studentId: "some-student-id-from-context-or-auth",
+      // scannedAt: new Date().toISOString(),
     };
 
-    const onScanError = (err: string) => {
-      // Suppress noisy errors
-      console.warn(err);
+    const response = await fetch('/api/attendance', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    // 3. Handle response from server
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.error || `Server responded with ${response.status}`);
+    }
+
+    const savedRecord = await response.json(); // ← this has the server-created record (with id, createdAt, etc.)
+
+    // 4. Update local UI state with the confirmed saved data
+    setAttendanceData((prev) => [
+      {
+        ...savedRecord,
+        key: prev.length + 1,           // maintain your local key if needed
+      },
+      ...prev,
+    ]);
+
+    setScanResult('success');
+    message.success(`Attendance marked for ${data.subject}! ✅`);
+
+    // Stop camera
+    scannerRef.current?.pause();
+  } catch (err) {
+    console.error('Failed to save attendance:', err);
+    message.error('Could not save attendance – try again');
+    // Optional: keep scanner running or show retry button
+  }
+};
+
+    const onScanError = () => {
+      // Ignore noisy scan errors
     };
 
     scannerRef.current = new Html5QrcodeScanner(
@@ -202,15 +343,17 @@ export default function App() {
     );
 
     scannerRef.current.render(onScanSuccess, onScanError);
+  }, 100);
 
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch((error) => {
-          console.warn('Failed to clear scanner', error);
-        });
-      }
-    };
-  }, [activeKey, attendanceData]);
+  return () => {
+    clearTimeout(timer);
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(console.warn);
+      scannerRef.current = null;
+    }
+  };
+}, [activeKey, attendanceData]);
+
 
   const handleRescan = () => {
     setScanResult(null);
