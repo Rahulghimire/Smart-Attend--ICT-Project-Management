@@ -7,18 +7,26 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
-    const { email, password } = values;
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      message.success(`Logged in as ${data.user.email}`);
+      router.push("/user");
+    } catch (err: any) {
+      message.error(err.message);
+    } finally {
       setLoading(false);
-      if (email === "test@example.com" && password === "123456") {
-        message.success(`Logged in as ${email}`);
-        router.push("/user");
-      } else {
-        message.error("Invalid email or password");
-      }
-    }, 1000);
+    }
   };
 
   return (
