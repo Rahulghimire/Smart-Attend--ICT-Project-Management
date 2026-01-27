@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     const newRecord = await prisma.attendance.create({
       data: {
-        date: body.date,
+        date: new Date(body.date),
         subject: body.subject,
         status: body.status,
         method: body.method || "QR Scan",
