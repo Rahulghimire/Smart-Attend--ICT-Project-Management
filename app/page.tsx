@@ -3,31 +3,23 @@ import { message, Form, Input, Button } from "antd";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-
-
 export default function Home() {
-
   const [loading, setLoading] = useState(false);
-  // const router = useRouter();
-    const router = useRouter();
-
-
+  const router = useRouter();
 
   const onFinish = (values: any) => {
     setLoading(true);
     const { email, password } = values;
-
-  setTimeout(() => {
+    setTimeout(() => {
       setLoading(false);
       if (email === "test@example.com" && password === "123456") {
         message.success(`Logged in as ${email}`);
-        router.push("/user"); 
+        router.push("/user");
       } else {
         message.error("Invalid email or password");
       }
     }, 1000);
   };
-
 
   return (
     <div

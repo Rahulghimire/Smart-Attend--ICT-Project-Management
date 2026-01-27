@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 import {
   Layout,
   Menu,
@@ -13,7 +13,7 @@ import {
   Divider,
   Tag,
   message,
-} from 'antd';
+} from "antd";
 import {
   QrCode,
   History,
@@ -21,9 +21,9 @@ import {
   Users,
   FileText,
   CheckCircle,
-} from 'lucide-react';
-import { QRCodeCanvas } from 'qrcode.react';
-import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+} from "lucide-react";
+import { QRCodeCanvas } from "qrcode.react";
+import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
@@ -32,28 +32,29 @@ interface AttendanceEntry {
   key: number;
   date: string;
   subject: string;
-  status: 'Present' | 'Absent';
+  status: "Present" | "Absent";
   method: string;
 }
 
 export default function App() {
-  const [activeKey, setActiveKey] = useState('home');
+  const [activeKey, setActiveKey] = useState("home");
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+
   const [attendanceData, setAttendanceData] = useState<AttendanceEntry[]>([
     {
       key: 1,
-      date: '2026-01-06',
-      subject: 'CS101 - Introduction to Computer Science',
-      status: 'Present',
-      method: 'QR Scan',
+      date: "2026-01-06",
+      subject: "CS101 - Introduction to Computer Science",
+      status: "Present",
+      method: "QR Scan",
     },
     {
       key: 2,
-      date: '2026-01-05',
-      subject: 'MATH201 - Calculus II',
-      status: 'Present',
-      method: 'Wi-Fi Validation',
+      date: "2026-01-05",
+      subject: "MATH201 - Calculus II",
+      status: "Present",
+      method: "Wi-Fi Validation",
     },
   ]);
 
@@ -62,67 +63,83 @@ export default function App() {
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   const courses = [
-    { name: 'Master of Professional IT', code: 'MPIT' },
-    { name: 'Master of Business', code: 'MB' },
-    { name: 'MBA', code: 'MBA' },
-    { name: 'BBA', code: 'BBA' },
+    { name: "Master of Professional IT", code: "MPIT" },
+    { name: "Master of Business", code: "MB" },
+    { name: "MBA", code: "MBA" },
+    { name: "BBA", code: "BBA" },
   ];
 
   const subjectsByCourse: Record<string, { code: string; name: string }[]> = {
     MPIT: [
-      { code: 'CS101', name: 'Database Systems' },
-      { code: 'DB502', name: 'Applied IT Ethics' },
-      { code: 'SE601', name: 'ICT Project Management' },
-      { code: 'SE602', name: 'IT Infrastructure Management' },
+      { code: "CS101", name: "Database Systems" },
+      { code: "DB502", name: "Applied IT Ethics" },
+      { code: "SE601", name: "ICT Project Management" },
+      { code: "SE602", name: "IT Infrastructure Management" },
     ],
     MB: [
-      { code: 'ACC201', name: 'Accounting Principles' },
-      { code: 'MKT301', name: 'Marketing Management' },
+      { code: "ACC201", name: "Accounting Principles" },
+      { code: "MKT301", name: "Marketing Management" },
     ],
     MBA: [
-      { code: 'HR401', name: 'Human Resource Management' },
-      { code: 'FIN501', name: 'Corporate Finance' },
+      { code: "HR401", name: "Human Resource Management" },
+      { code: "FIN501", name: "Corporate Finance" },
     ],
     BBA: [
-      { code: 'BUS101', name: 'Business Fundamentals' },
-      { code: 'ECO201', name: 'Business Economics' },
+      { code: "BUS101", name: "Business Fundamentals" },
+      { code: "ECO201", name: "Business Economics" },
     ],
   };
 
   const columns = [
     {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
       sorter: (a: AttendanceEntry, b: AttendanceEntry) =>
         new Date(b.date).getTime() - new Date(a.date).getTime(),
     },
-    { title: 'Subject', dataIndex: 'subject', key: 'subject' },
+    { title: "Subject", dataIndex: "subject", key: "subject" },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: 'Present' | 'Absent') => (
-        <Tag color={status === 'Present' ? 'green' : 'red'}>{status}</Tag>
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status: "Present" | "Absent") => (
+        <Tag color={status === "Present" ? "green" : "red"}>{status}</Tag>
       ),
     },
-    { title: 'Method', dataIndex: 'method', key: 'method' },
+    { title: "Method", dataIndex: "method", key: "method" },
   ];
 
   const overallPercentage = attendanceData.length
     ? Math.round(
-        (attendanceData.filter((a) => a.status === 'Present').length /
+        (attendanceData.filter((a) => a.status === "Present").length /
           attendanceData.length) *
-          100
+          100,
       )
     : 0;
 
   const menuItems = [
-    { key: 'home', label: 'Home', icon: <Home className="w-5 h-5" /> },
-    { key: 'take', label: 'Take Attendance', icon: <QrCode className="w-5 h-5" /> },
-    { key: 'qr-attendance', label: 'QR Attendance', icon: <QrCode className="w-5 h-5" /> },
-    { key: 'history', label: 'Attendance History', icon: <History className="w-5 h-5" /> },
-    { key: 'scan-qr', label: 'Scan QR Code', icon: <QrCode className="w-5 h-5" /> },
+    { key: "home", label: "Home", icon: <Home className="w-5 h-5" /> },
+    {
+      key: "take",
+      label: "Take Attendance",
+      icon: <QrCode className="w-5 h-5" />,
+    },
+    {
+      key: "qr-attendance",
+      label: "QR Attendance",
+      icon: <QrCode className="w-5 h-5" />,
+    },
+    {
+      key: "history",
+      label: "Attendance History",
+      icon: <History className="w-5 h-5" />,
+    },
+    {
+      key: "scan-qr",
+      label: "Scan QR Code",
+      icon: <QrCode className="w-5 h-5" />,
+    },
   ];
 
   const qrValue =
@@ -132,22 +149,41 @@ export default function App() {
           subject: selectedSubject,
           timestamp: Date.now(),
         })
-      : '';
+      : "";
 
-  const handleSubmitAttendance = () => {
+  const handleSubmitAttendance = async () => {
     if (!selectedCourse || !selectedSubject) {
-      message.error('Please select course and subject');
+      message.error("Please select course and subject");
       return;
     }
-    const newEntry: AttendanceEntry = {
-      key: attendanceData.length + 1,
-      date: new Date().toISOString().split('T')[0],
+
+    const payload = {
+      date: new Date().toISOString().split("T")[0],
       subject: `${selectedSubject} (${selectedCourse})`,
-      status: 'Present',
-      method: 'Manual',
+      status: "Present",
+      method: "Manual",
     };
-    setAttendanceData([newEntry, ...attendanceData]);
-    message.success('Attendance submitted successfully!');
+
+    try {
+      const res = await fetch("/api/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error();
+
+      const saved = await res.json();
+
+      setAttendanceData((prev) => [
+        { ...saved, key: prev.length + 1 },
+        ...prev,
+      ]);
+
+      message.success("Attendance submitted successfully!");
+    } catch {
+      message.error("Failed to submit attendance");
+    }
   };
 
   // QR Scanner Logic
@@ -212,148 +248,193 @@ export default function App() {
   //   };
   // }, [activeKey, attendanceData]);
 
+  // useEffect(() => {
+  //   if (activeKey !== "scan-qr") {
+  //     // Cleanup when leaving scan tab
+  //     if (scannerRef.current) {
+  //       scannerRef.current.clear().catch(console.warn);
+  //       scannerRef.current = null;
+  //     }
+  //     return;
+  //   }
+
+  //   // Give React time to mount #qr-reader
+  //   const timer = setTimeout(() => {
+  //     const readerElement = document.getElementById("qr-reader");
+  //     if (!readerElement) {
+  //       console.warn("qr-reader element not found");
+  //       return;
+  //     }
+
+  //     const onScanSuccess = async (decodedText: string) => {
+  //       try {
+  //         const data = JSON.parse(decodedText);
+
+  //         if (!data.course || !data.subject) {
+  //           message.error("Invalid QR code: missing course or subject");
+  //           return;
+  //         }
+
+  //         const fullSubjectName =
+  //           subjectsByCourse[data.course]?.find((s) => s.code === data.subject)
+  //             ?.name || data.subject;
+
+  //         const payload = {
+  //           date: new Date().toISOString().split("T")[0],
+  //           subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+  //           status: "Present",
+  //           method: "QR Scan",
+  //         };
+
+  //         const response = await fetch("/api/attendance", {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //           body: JSON.stringify(payload),
+  //         });
+
+  //         // 3. Handle response from server
+  //         if (!response.ok) {
+  //           const errorBody = await response.json().catch(() => ({}));
+  //           throw new Error(
+  //             errorBody.error || `Server responded with ${response.status}`,
+  //           );
+  //         }
+
+  //         const savedRecord = await response.json(); // ← this has the server-created record (with id, createdAt, etc.)
+
+  //         // 4. Update local UI state with the confirmed saved data
+  //         setAttendanceData((prev) => [
+  //           {
+  //             ...savedRecord,
+  //             key: prev.length + 1, // maintain your local key if needed
+  //           },
+  //           ...prev,
+  //         ]);
+
+  //         setScanResult("success");
+  //         message.success(`Attendance marked for ${data.subject}! ✅`);
+
+  //         // Stop camera
+  //         scannerRef.current?.pause();
+  //       } catch (err) {
+  //         console.error("Failed to save attendance:", err);
+  //         message.error("Could not save attendance – try again");
+  //         // Optional: keep scanner running or show retry button
+  //       }
+  //     };
+
+  //     const onScanError = () => {
+  //       // Ignore noisy scan errors
+  //     };
+
+  //     scannerRef.current = new Html5QrcodeScanner(
+  //       "qr-reader",
+  //       {
+  //         fps: 10,
+  //         qrbox: { width: 300, height: 300 },
+  //         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+  //         aspectRatio: 1,
+  //       },
+  //       false,
+  //     );
+
+  //     scannerRef.current.render(onScanSuccess, onScanError);
+  //   }, 100);
+
+  //   return () => {
+  //     clearTimeout(timer);
+  //     if (scannerRef.current) {
+  //       scannerRef.current.clear().catch(console.warn);
+  //       scannerRef.current = null;
+  //     }
+  //   };
+  // }, [activeKey, attendanceData]);
+
+  // Scanner ref
+  const qrReaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-  if (activeKey !== 'scan-qr') {
-    // Cleanup when leaving scan tab
-    if (scannerRef.current) {
-      scannerRef.current.clear().catch(console.warn);
-      scannerRef.current = null;
-    }
-    return;
-  }
-
-  // Give React time to mount #qr-reader
-  const timer = setTimeout(() => {
-    const readerElement = document.getElementById('qr-reader');
-    if (!readerElement) {
-      console.warn('qr-reader element not found');
+    if (activeKey !== "scan-qr") {
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(console.warn);
+        scannerRef.current = null;
+      }
       return;
     }
 
-    // const onScanSuccess = (decodedText: string) => {
-    //   try {
-    //     const data = JSON.parse(decodedText);
-
-    //     if (!data.course || !data.subject) {
-    //       message.error('Invalid QR code: missing course or subject');
-    //       return;
-    //     }
-
-    //     const fullSubjectName =
-    //       subjectsByCourse[data.course]?.find(
-    //         (s) => s.code === data.subject
-    //       )?.name || data.subject;
-
-    //     const newEntry: AttendanceEntry = {
-    //       key: attendanceData.length + 1,
-    //       date: new Date().toISOString().split('T')[0],
-    //       subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
-    //       status: 'Present',
-    //       method: 'QR Scan',
-    //     };
-
-    //     setAttendanceData((prev) => [newEntry, ...prev]);
-    //     setScanResult('success');
-    //     message.success(`Attendance marked for ${data.subject}! ✅`);
-
-    //     // Stop camera after successful scan
-    //     scannerRef.current?.pause();
-    //   } catch {
-    //     message.error('Invalid QR code format');
-    //   }
-    // };
+    if (!qrReaderRef.current) return;
+    if (scannerRef.current) return; // prevent double init
 
     const onScanSuccess = async (decodedText: string) => {
-  try {
-    const data = JSON.parse(decodedText);
+      try {
+        const data = JSON.parse(decodedText);
+        if (!data.course || !data.subject) {
+          message.error("Invalid QR code: missing course or subject");
+          return;
+        }
 
-    if (!data.course || !data.subject) {
-      message.error('Invalid QR code: missing course or subject');
-      return;
-    }
+        const fullSubjectName =
+          subjectsByCourse[data.course]?.find((s) => s.code === data.subject)
+            ?.name || data.subject;
 
-    const fullSubjectName =
-      subjectsByCourse[data.course]?.find((s) => s.code === data.subject)?.name ||
-      data.subject;
+        const payload = {
+          date: new Date().toISOString().split("T")[0],
+          subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+          status: "Present",
+          method: "QR Scan",
+        };
 
-    // 1. Prepare the data you want to send to backend
-    const payload = {
-      date: new Date().toISOString().split('T')[0],
-      subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
-      status: 'Present',
-      method: 'QR Scan',
-      // You can add more fields if your backend expects them:
-      // course: data.course,
-      // subjectCode: data.subject,
-      // studentId: "some-student-id-from-context-or-auth",
-      // scannedAt: new Date().toISOString(),
+        const response = await fetch("/api/attendance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.json().catch(() => ({}));
+          throw new Error(errorBody.error || `Server ${response.status}`);
+        }
+
+        const savedRecord = await response.json();
+
+        setAttendanceData((prev) => [
+          { ...savedRecord, key: prev.length + 1 },
+          ...prev,
+        ]);
+
+        setScanResult("success");
+        message.success(`Attendance marked for ${data.subject}! ✅`);
+
+        // Stop camera
+        scannerRef.current?.clear();
+      } catch (err) {
+        console.error(err);
+        message.error("Could not save attendance – try again");
+      }
     };
 
-    const response = await fetch('/api/attendance', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    // 3. Handle response from server
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
-      throw new Error(errorBody.error || `Server responded with ${response.status}`);
-    }
-
-    const savedRecord = await response.json(); // ← this has the server-created record (with id, createdAt, etc.)
-
-    // 4. Update local UI state with the confirmed saved data
-    setAttendanceData((prev) => [
-      {
-        ...savedRecord,
-        key: prev.length + 1,           // maintain your local key if needed
-      },
-      ...prev,
-    ]);
-
-    setScanResult('success');
-    message.success(`Attendance marked for ${data.subject}! ✅`);
-
-    // Stop camera
-    scannerRef.current?.pause();
-  } catch (err) {
-    console.error('Failed to save attendance:', err);
-    message.error('Could not save attendance – try again');
-    // Optional: keep scanner running or show retry button
-  }
-};
-
-    const onScanError = () => {
-      // Ignore noisy scan errors
-    };
+    const onScanError = () => {};
 
     scannerRef.current = new Html5QrcodeScanner(
-      'qr-reader',
+      qrReaderRef.current.id,
       {
         fps: 10,
         qrbox: { width: 300, height: 300 },
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
         aspectRatio: 1,
       },
-      false
+      false,
     );
 
     scannerRef.current.render(onScanSuccess, onScanError);
-  }, 100);
 
-  return () => {
-    clearTimeout(timer);
-    if (scannerRef.current) {
-      scannerRef.current.clear().catch(console.warn);
+    return () => {
+      scannerRef.current?.clear().catch(console.warn);
       scannerRef.current = null;
-    }
-  };
-}, [activeKey, attendanceData]);
-
+    };
+  }, [activeKey]);
 
   const handleRescan = () => {
     setScanResult(null);
@@ -361,245 +442,262 @@ export default function App() {
   };
 
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Header className="bg-gradient-to-r from-indigo-700 to-blue-800 shadow-lg border-b-0">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-4">
-          <div className="flex items-center space-x-4"
-          onClick={()=>setActiveKey('home')} style={{cursor: 'pointer'}}
-          >
-            <QrCode className="w-10 h-10 text-white" />
-            <Title level={3} className="!text-white mt-3 mb-0 !text-2xl font-bold">
-              SmartAttend
-            </Title>
-          </div>
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            selectedKeys={[activeKey]}
-            items={menuItems}
-            onClick={(e) => setActiveKey(e.key)}
-            className="bg-transparent border-0 text-lg min-w-0"
-          />
-        </div>
-      </Header>
-
-      <Content className="max-w-7xl mx-auto p-6 md:p-8">
-        {/* Home Section */}
-        {activeKey === 'home' && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-green-500 to-teal-600 text-white border-0 rounded-2xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Text className="text-white text-5xl font-bold">
-                      {overallPercentage}%
-                    </Text>
-                    <Title level={4} className="text-white mb-0 !text-xl">
-                      Overall Attendance
-                    </Title>
-                  </div>
-                  <CheckCircle className="w-20 h-20 opacity-80" />
-                </div>
-              </Card>
-              <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 rounded-2xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Text className="text-white text-5xl font-bold">4/5</Text>
-                    <Title level={4} className="text-white mb-0 !text-xl">
-                      Classes Today
-                    </Title>
-                  </div>
-                  <Users className="w-20 h-20 opacity-80" />
-                </div>
-              </Card>
-              <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 rounded-2xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Text className="text-white text-5xl font-bold">
-                      {attendanceData.length}
-                    </Text>
-                    <Title level={4} className="text-white mb-0 !text-xl">
-                      Total Sessions
-                    </Title>
-                  </div>
-                  <FileText className="w-20 h-20 opacity-80" />
-                </div>
-              </Card>
-            </div>
-            <Card className="shadow-2xl bg-white/90 backdrop-blur-lg rounded-2xl border-0">
-              <Title level={2} className="text-center text-indigo-800 mb-6">
-                Welcome to Smart Attendance System
+    <>
+      <Layout className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Header className="bg-gradient-to-r from-indigo-700 to-blue-800 shadow-lg border-b-0">
+          <div className="max-w-7xl mx-auto flex items-center justify-between px-4">
+            <div
+              className="flex items-center space-x-4"
+              onClick={() => setActiveKey("home")}
+              style={{ cursor: "pointer" }}
+            >
+              <QrCode className="w-10 h-10 text-white" />
+              <Title
+                level={3}
+                className="!text-white mt-3 mb-0 !text-2xl font-bold"
+              >
+                SmartAttend
               </Title>
-              <Divider className="border-indigo-200" />
-              <Text className="text-lg text-gray-700 text-center block mb-8">
-                A modern, secure, and efficient way to manage attendance using QR
-                codes and Wi-Fi validation.
-              </Text>
-            </Card>
-          </>
-        )}
-
-        {/* Scan QR Code Section */}
-        {activeKey === 'scan-qr' && (
-          <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-8">
-            <Title level={2} className="text-center text-indigo-800 mb-6">
-              Scan QR Code for Attendance
-            </Title>
-
-            {!scanResult ? (
-              <>
-                <div
-                  id="qr-reader"
-                  className="mx-auto w-full max-w-md rounded-lg overflow-hidden shadow-inner"
-                  style={{ aspectRatio: '1 / 1' }}
-                />
-                <Text className="block text-center text-gray-600 mt-6 text-lg">
-                  Position the QR code within the frame
-                </Text>
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <CheckCircle className="w-24 h-24 text-green-600 mx-auto mb-6" />
-                <Title level={3} className="text-green-700">
-                  Attendance Marked Successfully! ✅
-                </Title>
-                <Button
-                  type="primary"
-                  size="large"
-                  className="mt-8"
-                  onClick={handleRescan}
-                >
-                  Scan Another QR Code
-                </Button>
-              </div>
-            )}
-          </Card>
-        )}
-
-        {activeKey === 'qr-attendance' && (
-          <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
-            <Title level={2} className="text-indigo-800 mb-2 text-center">
-              Generate QR for Attendance
-            </Title>
-            <div className="mb-6 flex justify-center">
-              {qrValue ? (
-                <QRCodeCanvas value={qrValue} size={200} level="H" />
-              ) : (
-                <QrCode className="w-32 h-32 text-indigo-600 mx-auto" />
-              )}
             </div>
-            <Form layout="vertical">
-              <Form.Item label="Course">
-                <Select
-                  placeholder="Choose your course"
-                  size="large"
-                  onChange={(value) => {
-                    setSelectedCourse(value);
-                    setSelectedSubject(null);
-                  }}
-                >
-                  {courses.map((c) => (
-                    <Select.Option key={c.code} value={c.code}>
-                      {c.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item label="Subject">
-                <Select
-                  placeholder={
-                    selectedCourse ? 'Choose subject' : 'Select course first'
-                  }
-                  size="large"
-                  disabled={!selectedCourse}
-                  onChange={(value) => setSelectedSubject(value)}
-                >
-                  {selectedCourse &&
-                    subjectsByCourse[selectedCourse]?.map((s) => (
-                      <Select.Option key={s.code} value={s.code}>
-                        {s.code} - {s.name}
-                      </Select.Option>
-                    ))}
-                </Select>
-              </Form.Item>
-              {qrValue && (
-                <div className="mt-4 text-center">
-                  <Text strong className="text-green-600">
-                    QR Generated Successfully ✅
+            <Menu
+              theme="dark"
+              mode="horizontal"
+              selectedKeys={[activeKey]}
+              items={menuItems}
+              onClick={(e) => setActiveKey(e.key)}
+              className="bg-transparent border-0 text-lg min-w-0"
+            />
+          </div>
+        </Header>
+
+        <Content className="max-w-7xl mx-auto p-6 md:p-8">
+          {/* Home Section */}
+          {activeKey === "home" && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-green-500 to-teal-600 text-white border-0 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Text className="text-white text-5xl font-bold">
+                        {overallPercentage}%
+                      </Text>
+                      <Title level={4} className="text-white mb-0 !text-xl">
+                        Overall Attendance
+                      </Title>
+                    </div>
+                    <CheckCircle className="w-20 h-20 opacity-80" />
+                  </div>
+                </Card>
+                <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Text className="text-white text-5xl font-bold">4/5</Text>
+                      <Title level={4} className="text-white mb-0 !text-xl">
+                        Classes Today
+                      </Title>
+                    </div>
+                    <Users className="w-20 h-20 opacity-80" />
+                  </div>
+                </Card>
+                <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Text className="text-white text-5xl font-bold">
+                        {attendanceData.length}
+                      </Text>
+                      <Title level={4} className="text-white mb-0 !text-xl">
+                        Total Sessions
+                      </Title>
+                    </div>
+                    <FileText className="w-20 h-20 opacity-80" />
+                  </div>
+                </Card>
+              </div>
+              <Card className="shadow-2xl bg-white/90 backdrop-blur-lg rounded-2xl border-0">
+                <Title level={2} className="text-center text-indigo-800 mb-6">
+                  Welcome to Smart Attendance System
+                </Title>
+                <Divider className="border-indigo-200" />
+                <Text className="text-lg text-gray-700 text-center block mb-8">
+                  A modern, secure, and efficient way to manage attendance using
+                  QR codes and Wi-Fi validation.
+                </Text>
+              </Card>
+            </>
+          )}
+
+          {/* Scan QR Code Section */}
+          {activeKey === "scan-qr" && (
+            <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-8">
+              <Title level={2} className="text-center text-indigo-800 mb-6">
+                Scan QR Code for Attendance
+              </Title>
+
+              {!scanResult ? (
+                <>
+                  <div
+                    id="qr-reader"
+                    className="mx-auto w-full max-w-md rounded-lg overflow-hidden shadow-inner"
+                    style={{ aspectRatio: "1 / 1" }}
+                  />
+                  <Text className="block text-center text-gray-600 mt-6 text-lg">
+                    Position the QR code within the frame
                   </Text>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <CheckCircle className="w-24 h-24 text-green-600 mx-auto mb-6" />
+                  <Title level={3} className="text-green-700">
+                    Attendance Marked Successfully! ✅
+                  </Title>
+                  <Button
+                    type="primary"
+                    size="large"
+                    className="mt-8"
+                    onClick={handleRescan}
+                  >
+                    Scan Another QR Code
+                  </Button>
                 </div>
               )}
-            </Form>
-          </Card>
-        )}
+            </Card>
+          )}
 
-        {activeKey === 'take' && (
-          <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
-            <Title level={2} className="text-indigo-800 mb-2 text-center">
-              Manual Attendance
-            </Title>
-            <Form layout="vertical">
-              <Form.Item label="Course">
-                <Select
-                  placeholder="Choose your course"
-                  size="large"
-                  onChange={(value) => {
-                    setSelectedCourse(value);
-                    setSelectedSubject(null);
-                  }}
-                >
-                  {courses.map((c) => (
-                    <Select.Option key={c.code} value={c.code}>
-                      {c.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item label="Subject">
-                <Select
-                  placeholder={
-                    selectedCourse ? 'Choose subject' : 'Select course first'
-                  }
-                  size="large"
-                  disabled={!selectedCourse}
-                  onChange={(value) => setSelectedSubject(value)}
-                >
-                  {selectedCourse &&
-                    subjectsByCourse[selectedCourse]?.map((s) => (
-                      <Select.Option key={s.code} value={s.code}>
-                        {s.code} - {s.name}
+          {activeKey === "qr-attendance" && (
+            <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+              <Title level={2} className="text-indigo-800 mb-2 text-center">
+                Generate QR for Attendance
+              </Title>
+              <div className="mb-6 flex justify-center">
+                {qrValue ? (
+                  <QRCodeCanvas value={qrValue} size={200} level="H" />
+                ) : (
+                  <QrCode className="w-32 h-32 text-indigo-600 mx-auto" />
+                )}
+              </div>
+              <Form layout="vertical">
+                <Form.Item label="Course">
+                  <Select
+                    placeholder="Choose your course"
+                    size="large"
+                    onChange={(value) => {
+                      setSelectedCourse(value);
+                      setSelectedSubject(null);
+                    }}
+                  >
+                    {courses.map((c) => (
+                      <Select.Option key={c.code} value={c.code}>
+                        {c.name}
                       </Select.Option>
                     ))}
-                </Select>
-              </Form.Item>
-              <div className="flex justify-center">
-                <Button type="primary" size="large" onClick={handleSubmitAttendance}>
-                  Mark Present
-                </Button>
-              </div>
-            </Form>
-          </Card>
-        )}
+                  </Select>
+                </Form.Item>
+                <Form.Item label="Subject">
+                  <Select
+                    placeholder={
+                      selectedCourse ? "Choose subject" : "Select course first"
+                    }
+                    size="large"
+                    disabled={!selectedCourse}
+                    onChange={(value) => setSelectedSubject(value)}
+                  >
+                    {selectedCourse &&
+                      subjectsByCourse[selectedCourse]?.map((s) => (
+                        <Select.Option key={s.code} value={s.code}>
+                          {s.code} - {s.name}
+                        </Select.Option>
+                      ))}
+                  </Select>
+                </Form.Item>
+                {qrValue && (
+                  <div className="mt-4 text-center">
+                    <Text strong className="text-green-600">
+                      QR Generated Successfully ✅
+                    </Text>
+                  </div>
+                )}
+              </Form>
+            </Card>
+          )}
 
-        {activeKey === 'history' && (
-          <Card className="shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
-            <Title level={2} className="text-indigo-800 mb-4">
-              Attendance History
-            </Title>
-            <Table
-              columns={columns}
-              dataSource={attendanceData}
-              pagination={{ pageSize: 10 }}
-            />
-          </Card>
-        )}
-      </Content>
+          {activeKey === "take" && (
+            <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+              <Title level={2} className="text-indigo-800 mb-2 text-center">
+                Manual Attendance
+              </Title>
+              <Form layout="vertical">
+                <Form.Item label="Course">
+                  <Select
+                    placeholder="Choose your course"
+                    size="large"
+                    onChange={(value) => {
+                      setSelectedCourse(value);
+                      setSelectedSubject(null);
+                    }}
+                  >
+                    {courses.map((c) => (
+                      <Select.Option key={c.code} value={c.code}>
+                        {c.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item label="Subject">
+                  <Select
+                    placeholder={
+                      selectedCourse ? "Choose subject" : "Select course first"
+                    }
+                    size="large"
+                    disabled={!selectedCourse}
+                    onChange={(value) => setSelectedSubject(value)}
+                  >
+                    {selectedCourse &&
+                      subjectsByCourse[selectedCourse]?.map((s) => (
+                        <Select.Option key={s.code} value={s.code}>
+                          {s.code} - {s.name}
+                        </Select.Option>
+                      ))}
+                  </Select>
+                </Form.Item>
+                <div className="flex justify-center">
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={handleSubmitAttendance}
+                  >
+                    Mark Present
+                  </Button>
+                </div>
+              </Form>
+            </Card>
+          )}
 
-      <Footer className="text-center bg-gradient-to-r from-indigo-900 to-blue-900 text-white py-10">
-        <Text className="text-white text-lg">
-          Smart Attendance System ©2026 | Secure • Fast • Reliable
-        </Text>
-      </Footer>
-    </Layout>
+          {activeKey === "history" && (
+            <Card className="shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+              <Title level={2} className="text-indigo-800 mb-4">
+                Attendance History
+              </Title>
+              <Table
+                columns={columns}
+                dataSource={attendanceData}
+                pagination={{ pageSize: 10 }}
+              />
+            </Card>
+          )}
+        </Content>
+
+        <Footer className="text-center bg-gradient-to-r from-indigo-900 to-blue-900 text-white py-10">
+          <Text className="text-white text-lg">
+            Smart Attendance System ©2026 | Secure • Fast • Reliable
+          </Text>
+        </Footer>
+      </Layout>
+      <div
+        ref={qrReaderRef}
+        id="qr-reader"
+        className="mx-auto w-full max-w-md rounded-lg overflow-hidden shadow-inner"
+        style={{ aspectRatio: "1 / 1" }}
+      />
+    </>
   );
 }

@@ -1,0 +1,9 @@
+-- CreateTable
+CREATE TABLE "Attendance" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "date" DATETIME NOT NULL,
+    "subject" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "method" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
