@@ -708,7 +708,7 @@ export default function App() {
               <Table
                 columns={columns}
                 scroll={{
-                  x: "50vw",
+                  x: "60vw",
                 }}
                 dataSource={attendanceData}
                 pagination={{ pageSize: 10 }}
