@@ -42,23 +42,22 @@ export default function App() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
   const [attendanceData, setAttendanceData] = useState<AttendanceEntry[]>([
-    {
-      key: 1,
-      date: "2026-01-06",
-      subject: "CS101 - Introduction to Computer Science",
-      status: "Present",
-      method: "QR Scan",
-    },
-    {
-      key: 2,
-      date: "2026-01-05",
-      subject: "MATH201 - Calculus II",
-      status: "Present",
-      method: "Wi-Fi Validation",
-    },
+    // {
+    //   key: 1,
+    //   date: "2026-01-06",
+    //   subject: "CS101 - Introduction to Computer Science",
+    //   status: "Present",
+    //   method: "QR Scan",
+    // },
+    // {
+    //   key: 2,
+    //   date: "2026-01-05",
+    //   subject: "MATH201 - Calculus II",
+    //   status: "Present",
+    //   method: "Wi-Fi Validation",
+    // },
   ]);
 
-  // Scanner state
   const [scanResult, setScanResult] = useState<string | null>(null);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
@@ -185,6 +184,35 @@ export default function App() {
       message.error("Failed to submit attendance");
     }
   };
+
+  useEffect(() => {
+    if (activeKey !== "history") return;
+
+    const fetchAttendance = async () => {
+      try {
+        const res = await fetch("/api/attendance");
+        if (!res.ok) throw new Error("Failed to fetch attendance");
+        const data = await res.json();
+
+        const formatted: AttendanceEntry[] = data?.map(
+          (item: any, index: number) => ({
+            key: index + 1,
+            date: new Date(item.date).toISOString().split("T")[0],
+            subject: item.subject,
+            status: item.status === "Present" ? "Present" : "Absent",
+            method: item.method,
+          }),
+        );
+
+        setAttendanceData(formatted);
+      } catch (err) {
+        console.error(err);
+        message.error("Could not load attendance data");
+      }
+    };
+
+    fetchAttendance();
+  }, [activeKey]);
 
   // QR Scanner Logic
   // useEffect(() => {

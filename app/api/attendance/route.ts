@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-
     const newRecord = await prisma.attendance.create({
       data: {
         date: new Date(body.date),
@@ -27,7 +26,6 @@ export async function POST(request: NextRequest) {
         method: body.method || "QR Scan",
       },
     });
-    console.log("New attendance record:", newRecord);
     return NextResponse.json(newRecord, { status: 201 });
   } catch (error) {
     console.error("POST /api/attendance error:", error);
@@ -39,7 +37,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  // Fetch all attendance records
   try {
     const records = await prisma.attendance.findMany({
       orderBy: { createdAt: "desc" },
