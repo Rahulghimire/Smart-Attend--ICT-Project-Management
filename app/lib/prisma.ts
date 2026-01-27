@@ -1,23 +1,35 @@
-// lib/prisma.ts
-import { Pool } from 'pg';                        // npm install pg
-import { PrismaPg } from '@prisma/adapter-pg';    // npm install @prisma/adapter-pg
+import 'dotenv/config';
+import { PrismaClient } from './generated/prisma'
+import { PrismaLibSql } from '@prisma/adapter-libsql';
 
-import { PrismaClient } from '@prisma/client';    // This now works with the new generator
-
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error('DATABASE_URL missing in .env');
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL is not configured');
 }
 
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
+// Global singleton to avoid multiple instances in development
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+  prismaAdapter: PrismaLibSql | undefined;
+};
 
-const prisma = new PrismaClient({ adapter });     // ← Pass adapter here
+// Create the libSQL adapter
+const adapter =
+  globalForPrisma.prismaAdapter ??
+  new PrismaLibSql({
+    url: databaseUrl,
+  });
 
-// Optional singleton for dev hot-reload
+// Create Prisma client with the adapter
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+    log: ['query', 'error', 'warn'],
+  });
+
+// In development, save instances globally
 if (process.env.NODE_ENV !== 'production') {
-  (global as any).prisma = prisma;
+  globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaAdapter = adapter;
 }
-
-export default prisma;
