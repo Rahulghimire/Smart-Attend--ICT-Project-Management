@@ -12,6 +12,7 @@ import {
   Progress,
   Typography,
   Button,
+  message,
 } from "antd";
 import {
   LayoutDashboard,
@@ -23,6 +24,7 @@ import {
   Download,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -35,14 +37,25 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+interface UserEntry {
+  key: number;
+  id: number;
+  name: string | null;
+  email: string;
+  role: string;
+}
+
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 export default function Home() {
   const router = useRouter();
+  const [activeKey, setActiveKey] = useState("dashboard");
+
+  const [users, setUsers] = useState<UserEntry[]>([]);
 
   const stats = {
-    totalUsers: 120,
+    totalUsers: users?.length,
     presentToday: 96,
     absentToday: 24,
     attendanceRate: 80,
@@ -62,6 +75,33 @@ export default function Home() {
   ];
 
   const COLORS = ["#22c55e", "#ef4444"];
+
+  useEffect(() => {
+    if (activeKey !== "users") return;
+
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("/api/users");
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+        const formatted: UserEntry[] = data?.map(
+          (user: any, index: number) => ({
+            key: index + 1,
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }),
+        );
+        setUsers(formatted);
+      } catch (err) {
+        console.error(err);
+        message.error("Could not load users data");
+      }
+    };
+
+    fetchUsers();
+  }, [activeKey]);
 
   const columns = [
     { title: "Name", dataIndex: "name" },
@@ -105,8 +145,11 @@ export default function Home() {
         </div>
         <Menu
           mode="inline"
-          defaultSelectedKeys={["dashboard"]}
+          // defaultSelectedKeys={["dashboard"]}
+          selectedKeys={[activeKey]}
+          // onClick={({ key }) => setActiveKey(key)}
           onClick={({ key }) => {
+            setActiveKey(key);
             if (key === "dashboard") {
               router.push(`/dashboard-admin`);
               return;
