@@ -41,22 +41,9 @@ export default function App() {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
-  const [attendanceData, setAttendanceData] = useState<AttendanceEntry[]>([
-    // {
-    //   key: 1,
-    //   date: "2026-01-06",
-    //   subject: "CS101 - Introduction to Computer Science",
-    //   status: "Present",
-    //   method: "QR Scan",
-    // },
-    // {
-    //   key: 2,
-    //   date: "2026-01-05",
-    //   subject: "MATH201 - Calculus II",
-    //   status: "Present",
-    //   method: "Wi-Fi Validation",
-    // },
-  ]);
+  const [form] = Form.useForm();
+
+  const [attendanceData, setAttendanceData] = useState<AttendanceEntry[]>([]);
 
   const [scanResult, setScanResult] = useState<string | null>(null);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
@@ -70,10 +57,10 @@ export default function App() {
 
   const subjectsByCourse: Record<string, { code: string; name: string }[]> = {
     MPIT: [
-      { code: "CS101", name: "Database Systems" },
-      { code: "DB502", name: "Applied IT Ethics" },
-      { code: "SE601", name: "ICT Project Management" },
-      { code: "SE602", name: "IT Infrastructure Management" },
+      { code: "ITC556", name: "Database Systems" },
+      { code: "ITC506", name: "Applied IT Ethics" },
+      { code: "ITC505", name: "ICT Project Management" },
+      { code: "ITC540", name: "IT Infrastructure Management" },
     ],
     MB: [
       { code: "ACC201", name: "Accounting Principles" },
@@ -150,38 +137,48 @@ export default function App() {
         })
       : "";
 
-  const handleSubmitAttendance = async () => {
-    if (!selectedCourse || !selectedSubject) {
-      message.error("Please select course and subject");
-      return;
-    }
-
-    const payload = {
-      date: new Date().toISOString().split("T")[0],
-      subject: `${selectedSubject} (${selectedCourse})`,
-      status: "Present",
-      method: "Manual",
-    };
-
+  const onFinish = async (values: any) => {
     try {
+      await form.validateFields();
+
+      const selectedCourseCode = values?.course;
+      const selectedSubjectCode = values?.subject;
+
+      const fullSubjectName =
+        subjectsByCourse[selectedCourseCode]?.find(
+          (s) => s.code === selectedSubjectCode,
+        )?.name || selectedSubjectCode;
+
+      if (!selectedCourse || !selectedSubject) {
+        message.error("Please select course and subject");
+        return;
+      }
+
+      const payload = {
+        date: new Date().toISOString().split("T")[0],
+        subject: `${selectedSubject} (${fullSubjectName})`,
+        status: "Present",
+        method: "Manual",
+      };
+
       const res = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err?.error || "Submission failed");
+      }
 
-      const saved = await res.json();
-
-      setAttendanceData((prev) => [
-        { ...saved, key: prev.length + 1 },
-        ...prev,
-      ]);
+      form.resetFields();
+      setSelectedCourse(null);
+      setSelectedSubject(null);
 
       message.success("Attendance submitted successfully!");
-    } catch {
-      message.error("Failed to submit attendance");
+    } catch (err: any) {
+      message.error(err.message || "Failed to submit attendance");
     }
   };
 
@@ -393,7 +390,7 @@ export default function App() {
     }
 
     if (!qrReaderRef.current) return;
-    if (scannerRef.current) return; // prevent double init
+    if (scannerRef.current) return;
 
     const onScanSuccess = async (decodedText: string) => {
       try {
@@ -427,15 +424,14 @@ export default function App() {
 
         const savedRecord = await response.json();
 
-        setAttendanceData((prev) => [
-          { ...savedRecord, key: prev.length + 1 },
-          ...prev,
-        ]);
+        // setAttendanceData((prev) => [
+        //   { ...savedRecord, key: prev.length + 1 },
+        //   ...prev,
+        // ]);
 
         setScanResult("success");
         message.success(`Attendance marked for ${data.subject}! ✅`);
 
-        // Stop camera
         scannerRef.current?.clear();
       } catch (err) {
         console.error(err);
@@ -471,140 +467,140 @@ export default function App() {
 
   return (
     <>
-      <Layout className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Header className="bg-gradient-to-r from-indigo-700 to-blue-800 shadow-lg border-b-0">
-          <div className="max-w-7xl mx-auto flex items-center justify-between px-4">
-            <div
-              className="flex items-center space-x-4"
-              onClick={() => setActiveKey("home")}
-              style={{ cursor: "pointer" }}
-            >
-              <QrCode className="w-10 h-10 text-white" />
-              <Title
-                level={3}
-                className="!text-white mt-3 mb-0 !text-2xl font-bold"
+      <Form layout="vertical" form={form} onFinish={onFinish}>
+        <Layout className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+          <Header className="bg-gradient-to-r from-indigo-700 to-blue-800 shadow-lg border-b-0">
+            <div className="max-w-7xl mx-auto flex items-center justify-between px-4">
+              <div
+                className="flex items-center space-x-4"
+                onClick={() => setActiveKey("home")}
+                style={{ cursor: "pointer" }}
               >
-                SmartAttend
-              </Title>
-            </div>
-            <Menu
-              theme="dark"
-              mode="horizontal"
-              selectedKeys={[activeKey]}
-              items={menuItems}
-              onClick={(e) => setActiveKey(e.key)}
-              className="bg-transparent border-0 text-lg min-w-0"
-            />
-          </div>
-        </Header>
-
-        <Content className="max-w-7xl mx-auto p-6 md:p-8">
-          {/* Home Section */}
-          {activeKey === "home" && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-green-500 to-teal-600 text-white border-0 rounded-2xl">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Text className="text-white text-5xl font-bold">
-                        {overallPercentage}%
-                      </Text>
-                      <Title level={4} className="text-white mb-0 !text-xl">
-                        Overall Attendance
-                      </Title>
-                    </div>
-                    <CheckCircle className="w-20 h-20 opacity-80" />
-                  </div>
-                </Card>
-                <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 rounded-2xl">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Text className="text-white text-5xl font-bold">4/5</Text>
-                      <Title level={4} className="text-white mb-0 !text-xl">
-                        Classes Today
-                      </Title>
-                    </div>
-                    <Users className="w-20 h-20 opacity-80" />
-                  </div>
-                </Card>
-                <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 rounded-2xl">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Text className="text-white text-5xl font-bold">
-                        {attendanceData.length}
-                      </Text>
-                      <Title level={4} className="text-white mb-0 !text-xl">
-                        Total Sessions
-                      </Title>
-                    </div>
-                    <FileText className="w-20 h-20 opacity-80" />
-                  </div>
-                </Card>
-              </div>
-              <Card className="shadow-2xl bg-white/90 backdrop-blur-lg rounded-2xl border-0">
-                <Title level={2} className="text-center text-indigo-800 mb-6">
-                  Welcome to Smart Attendance System
+                <QrCode className="w-10 h-10 text-white" />
+                <Title
+                  level={3}
+                  className="!text-white mt-3 mb-0 !text-2xl font-bold"
+                >
+                  SmartAttend
                 </Title>
-                <Divider className="border-indigo-200" />
-                <Text className="text-lg text-gray-700 text-center block mb-8">
-                  A modern, secure, and efficient way to manage attendance using
-                  QR codes and Wi-Fi validation.
-                </Text>
-              </Card>
-            </>
-          )}
-
-          {/* Scan QR Code Section */}
-          {activeKey === "scan-qr" && (
-            <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-8">
-              <Title level={2} className="text-center text-indigo-800 mb-6">
-                Scan QR Code for Attendance
-              </Title>
-
-              {!scanResult ? (
-                <>
-                  <div
-                    id="qr-reader"
-                    className="mx-auto w-full max-w-md rounded-lg overflow-hidden shadow-inner"
-                    style={{ aspectRatio: "1 / 1" }}
-                  />
-                  <Text className="block text-center text-gray-600 mt-6 text-lg">
-                    Position the QR code within the frame
-                  </Text>
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  <CheckCircle className="w-24 h-24 text-green-600 mx-auto mb-6" />
-                  <Title level={3} className="text-green-700">
-                    Attendance Marked Successfully! ✅
-                  </Title>
-                  <Button
-                    type="primary"
-                    size="large"
-                    className="mt-8"
-                    onClick={handleRescan}
-                  >
-                    Scan Another QR Code
-                  </Button>
-                </div>
-              )}
-            </Card>
-          )}
-
-          {activeKey === "qr-attendance" && (
-            <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
-              <Title level={2} className="text-indigo-800 mb-2 text-center">
-                Generate QR for Attendance
-              </Title>
-              <div className="mb-6 flex justify-center">
-                {qrValue ? (
-                  <QRCodeCanvas value={qrValue} size={200} level="H" />
-                ) : (
-                  <QrCode className="w-32 h-32 text-indigo-600 mx-auto" />
-                )}
               </div>
-              <Form layout="vertical">
-                <Form.Item label="Course">
+              <Menu
+                theme="dark"
+                mode="horizontal"
+                selectedKeys={[activeKey]}
+                items={menuItems}
+                onClick={(e) => setActiveKey(e.key)}
+                className="bg-transparent border-0 text-lg min-w-0"
+              />
+            </div>
+          </Header>
+
+          <Content className="max-w-7xl mx-auto p-6 md:p-8">
+            {activeKey === "home" && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                  <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-green-500 to-teal-600 text-white border-0 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-white text-5xl font-bold">
+                          {overallPercentage}%
+                        </Text>
+                        <Title level={4} className="text-white mb-0 !text-xl">
+                          Overall Attendance
+                        </Title>
+                      </div>
+                      <CheckCircle className="w-20 h-20 opacity-80" />
+                    </div>
+                  </Card>
+                  <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-white text-5xl font-bold">
+                          4/5
+                        </Text>
+                        <Title level={4} className="text-white mb-0 !text-xl">
+                          Classes Today
+                        </Title>
+                      </div>
+                      <Users className="w-20 h-20 opacity-80" />
+                    </div>
+                  </Card>
+                  <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Text className="text-white text-5xl font-bold">
+                          {attendanceData.length}
+                        </Text>
+                        <Title level={4} className="text-white mb-0 !text-xl">
+                          Total Sessions
+                        </Title>
+                      </div>
+                      <FileText className="w-20 h-20 opacity-80" />
+                    </div>
+                  </Card>
+                </div>
+                <Card className="shadow-2xl bg-white/90 backdrop-blur-lg rounded-2xl border-0">
+                  <Title level={2} className="text-center text-indigo-800 mb-6">
+                    Welcome to Smart Attendance System
+                  </Title>
+                  <Divider className="border-indigo-200" />
+                  <Text className="text-lg text-gray-700 text-center block mb-8">
+                    A modern, secure, and efficient way to manage attendance
+                    using QR codes and Wi-Fi validation.
+                  </Text>
+                </Card>
+              </>
+            )}
+
+            {activeKey === "scan-qr" && (
+              <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-8">
+                <Title level={2} className="text-center text-indigo-800 mb-6">
+                  Scan QR Code for Attendance
+                </Title>
+
+                {!scanResult ? (
+                  <>
+                    <div
+                      id="qr-reader"
+                      className="mx-auto w-full max-w-md rounded-lg overflow-hidden shadow-inner"
+                      style={{ aspectRatio: "1 / 1" }}
+                    />
+                    <Text className="block text-center text-gray-600 mt-6 text-lg">
+                      Position the QR code within the frame
+                    </Text>
+                  </>
+                ) : (
+                  <div className="text-center py-12">
+                    <CheckCircle className="w-24 h-24 text-green-600 mx-auto mb-6" />
+                    <Title level={3} className="text-green-700">
+                      Attendance Marked Successfully! ✅
+                    </Title>
+                    <Button
+                      type="primary"
+                      size="large"
+                      className="mt-8"
+                      onClick={handleRescan}
+                    >
+                      Scan Another QR Code
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {activeKey === "qr-attendance" && (
+              <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+                <Title level={2} className="text-indigo-800 mb-2 text-center">
+                  Generate QR for Attendance
+                </Title>
+                <div className="mb-6 flex justify-center">
+                  {qrValue ? (
+                    <QRCodeCanvas value={qrValue} size={200} level="H" />
+                  ) : (
+                    <QrCode className="w-32 h-32 text-indigo-600 mx-auto" />
+                  )}
+                </div>
+                <Form.Item label="Course" name={"course"}>
                   <Select
                     placeholder="Choose your course"
                     size="large"
@@ -620,7 +616,7 @@ export default function App() {
                     ))}
                   </Select>
                 </Form.Item>
-                <Form.Item label="Subject">
+                <Form.Item label="Subject" name={"subject"}>
                   <Select
                     placeholder={
                       selectedCourse ? "Choose subject" : "Select course first"
@@ -644,23 +640,22 @@ export default function App() {
                     </Text>
                   </div>
                 )}
-              </Form>
-            </Card>
-          )}
+              </Card>
+            )}
 
-          {activeKey === "take" && (
-            <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
-              <Title level={2} className="text-indigo-800 mb-2 text-center">
-                Manual Attendance
-              </Title>
-              <Form layout="vertical">
-                <Form.Item label="Course">
+            {activeKey === "take" && (
+              <Card className="w-full lg:w-110 mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+                <Title level={2} className="text-indigo-800 mb-2 text-center">
+                  Manual Attendance
+                </Title>
+                <Form.Item label="Course" name={"course"}>
                   <Select
                     placeholder="Choose your course"
                     size="large"
                     onChange={(value) => {
                       setSelectedCourse(value);
                       setSelectedSubject(null);
+                      form.setFieldsValue({ subject: null });
                     }}
                   >
                     {courses.map((c) => (
@@ -670,7 +665,7 @@ export default function App() {
                     ))}
                   </Select>
                 </Form.Item>
-                <Form.Item label="Subject">
+                <Form.Item label="Subject" name={"subject"}>
                   <Select
                     placeholder={
                       selectedCourse ? "Choose subject" : "Select course first"
@@ -688,47 +683,43 @@ export default function App() {
                   </Select>
                 </Form.Item>
                 <div className="flex justify-center">
-                  <Button
-                    type="primary"
-                    size="large"
-                    onClick={handleSubmitAttendance}
-                  >
+                  <Button type="primary" size="large" htmlType="submit">
                     Mark Present
                   </Button>
                 </div>
-              </Form>
-            </Card>
-          )}
+              </Card>
+            )}
 
-          {activeKey === "history" && (
-            <Card className="shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
-              <Title level={2} className="text-indigo-800 mb-4">
-                Attendance History
-              </Title>
-              <Table
-                columns={columns}
-                scroll={{
-                  x: "60vw",
-                }}
-                dataSource={attendanceData}
-                pagination={{ pageSize: 10 }}
-              />
-            </Card>
-          )}
-        </Content>
+            {activeKey === "history" && (
+              <Card className="shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+                <Title level={2} className="text-indigo-800 mb-4">
+                  Attendance History
+                </Title>
+                <Table
+                  columns={columns}
+                  scroll={{
+                    x: "60vw",
+                  }}
+                  dataSource={attendanceData}
+                  pagination={{ pageSize: 10 }}
+                />
+              </Card>
+            )}
+          </Content>
 
-        <Footer className="text-center bg-gradient-to-r from-indigo-900 to-blue-900 text-white py-10">
-          <Text className="text-white text-lg">
-            Smart Attendance System ©2026 | Secure • Fast • Reliable
-          </Text>
-        </Footer>
-      </Layout>
-      <div
-        ref={qrReaderRef}
-        id="qr-reader"
-        className="mx-auto w-full max-w-md rounded-lg overflow-hidden shadow-inner"
-        style={{ aspectRatio: "1 / 1" }}
-      />
+          <Footer className="text-center bg-gradient-to-r from-indigo-900 to-blue-900 text-white py-10">
+            <Text className="text-white text-lg">
+              Smart Attendance System ©2026 | Secure • Fast • Reliable
+            </Text>
+          </Footer>
+        </Layout>
+        <div
+          ref={qrReaderRef}
+          id="qr-reader"
+          className="mx-auto w-full max-w-md rounded-lg overflow-hidden shadow-inner"
+          style={{ aspectRatio: "1 / 1" }}
+        />
+      </Form>
     </>
   );
 }
