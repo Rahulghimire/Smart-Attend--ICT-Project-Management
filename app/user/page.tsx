@@ -47,7 +47,6 @@ export default function App() {
 
   const [scanResult, setScanResult] = useState<string | null>(null);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
-  const qrReaderRef = useRef<HTMLDivElement>(null);
 
   const courses = [
     { name: "Master of Professional IT", code: "MPIT" },
@@ -212,155 +211,6 @@ export default function App() {
     fetchAttendance();
   }, [activeKey]);
 
-  // useEffect(() => {
-  //   if (activeKey !== "scan-qr") {
-  //     if (scannerRef.current) {
-  //       scannerRef.current.clear().catch(console.warn);
-  //       scannerRef.current = null;
-  //     }
-  //     return;
-  //   }
-
-  //   if (!qrReaderRef.current) return;
-  //   if (scannerRef.current) return;
-
-  //   const onScanSuccess = async (decodedText: string) => {
-  //     try {
-  //       const data = JSON.parse(decodedText);
-  //       if (!data.course || !data.subject) {
-  //         message.error("Invalid QR code: missing course or subject");
-  //         return;
-  //       }
-
-  //       const fullSubjectName =
-  //         subjectsByCourse[data.course]?.find((s) => s.code === data.subject)
-  //           ?.name || data.subject;
-
-  //       const payload = {
-  //         date: new Date().toISOString().split("T")[0],
-  //         subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
-  //         status: "Present",
-  //         method: "QR Scan",
-  //       };
-
-  //       const response = await fetch("/api/attendance", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify(payload),
-  //       });
-
-  //       if (!response.ok) {
-  //         const errorBody = await response.json().catch(() => ({}));
-  //         throw new Error(errorBody.error || `Server ${response.status}`);
-  //       }
-
-  //       const savedRecord = await response.json();
-
-  //       // setAttendanceData((prev) => [
-  //       //   { ...savedRecord, key: prev.length + 1 },
-  //       //   ...prev,
-  //       // ]);
-
-  //       setScanResult("success");
-  //       message.success(`Attendance marked for ${data.subject}! ✅`);
-
-  //       scannerRef.current?.clear();
-  //     } catch (err) {
-  //       console.error(err);
-  //       message.error("Could not save attendance – try again");
-  //     }
-  //   };
-
-  //   const onScanError = () => {};
-
-  //   scannerRef.current = new Html5QrcodeScanner(
-  //     qrReaderRef.current.id,
-  //     {
-  //       fps: 10,
-  //       qrbox: { width: 300, height: 300 },
-  //       supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-  //       aspectRatio: 1,
-  //     },
-  //     false,
-  //   );
-
-  //   scannerRef.current.render(onScanSuccess, onScanError);
-
-  //   return () => {
-  //     scannerRef.current?.clear().catch(console.warn);
-  //     scannerRef.current = null;
-  //   };
-  // }, [activeKey]);
-
-  // useEffect(() => {
-  //   if (activeKey !== "scan-qr") {
-  //     if (scannerRef.current) {
-  //       scannerRef.current
-  //         .clear()
-  //         .catch((err) => console.warn("Clear failed:", err));
-  //       scannerRef.current = null;
-  //     }
-  //     setScanResult(null); // reset success state when leaving tab
-  //     return;
-  //   }
-
-  //   // Delay slightly to ensure DOM is mounted (helps with Next.js + Strict Mode)
-  //   const timer = setTimeout(() => {
-  //     const container = document.getElementById("qr-reader");
-  //     if (!container) {
-  //       console.warn("QR reader container missing");
-  //       return;
-  //     }
-
-  //     if (scannerRef.current) {
-  //       console.warn("Scanner already initialized – skipping");
-  //       return;
-  //     }
-
-  //     const onScanSuccess = async (decodedText: string) => {
-  //       // ... your existing success logic here (parse JSON, fetch API, etc.) ...
-  //       // After success:
-  //       scannerRef.current?.clear().catch(console.warn);
-  //     };
-
-  //     const onScanError = (err: any) => {
-  //       // Ignore common "no QR found" errors
-  //       if (
-  //         err?.name !== "NotFoundException" &&
-  //         err?.name !== "NoMultiFormatReaderException"
-  //       ) {
-  //         console.debug("Scan error:", err);
-  //       }
-  //     };
-
-  //     scannerRef.current = new Html5QrcodeScanner(
-  //       "qr-reader",
-  //       {
-  //         fps: 10,
-  //         qrbox: { width: 280, height: 280 },
-  //         aspectRatio: 1.0,
-  //         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-  //         // Prefer back camera on mobile
-  //         defaultZoomValueIfSupported: 2,
-  //         // videoConstraints: { facingMode: "environment" } // uncomment if you want back camera forced
-  //       },
-  //       false, // verbose false
-  //     );
-
-  //     scannerRef.current.render(onScanSuccess, onScanError);
-  //   }, 300); // 300ms delay – adjust if needed (100–500 usually works)
-
-  //   return () => {
-  //     clearTimeout(timer);
-  //     if (scannerRef.current) {
-  //       scannerRef.current
-  //         .clear()
-  //         .catch((err) => console.warn("Cleanup failed:", err));
-  //       scannerRef.current = null;
-  //     }
-  //   };
-  // }, [activeKey]);
-
   useEffect(() => {
     if (activeKey !== "scan-qr") {
       if (scannerRef.current) {
@@ -369,11 +219,10 @@ export default function App() {
         });
         scannerRef.current = null;
       }
-      setScanResult(null); // Reset success state when leaving the tab
+      setScanResult(null);
       return;
     }
 
-    // Small delay to ensure the DOM element is fully mounted
     const timer = setTimeout(() => {
       const container = document.getElementById("qr-reader");
       if (!container) {
@@ -382,15 +231,12 @@ export default function App() {
         return;
       }
 
-      // Prevent double initialization
       if (scannerRef.current) {
         console.log("Scanner already initialized, skipping re-init");
         return;
       }
 
       const onScanSuccess = async (decodedText: string) => {
-        console.log("QR Code scanned:", decodedText);
-
         try {
           const data = JSON.parse(decodedText);
 
@@ -405,7 +251,7 @@ export default function App() {
 
           const payload = {
             date: new Date().toISOString().split("T")[0],
-            subject: `${data.subject} - ${fullSubjectName} (${data.course})`,
+            subject: `${selectedSubject} (${fullSubjectName})`,
             status: "Present",
             method: "QR Scan",
           };
@@ -423,18 +269,9 @@ export default function App() {
             );
           }
 
-          const savedRecord = await response.json();
-
-          // Optional: Add to local state (uncomment if you want instant UI update)
-          // setAttendanceData((prev) => [
-          //   { ...savedRecord, key: prev.length + 1 },
-          //   ...prev,
-          // ]);
-
           setScanResult("success");
           message.success(`Attendance marked for ${data.subject}! ✅`);
 
-          // Stop the scanner after successful scan
           scannerRef.current?.clear().catch((err) => {
             console.warn("Failed to stop scanner after success:", err);
           });
@@ -447,7 +284,6 @@ export default function App() {
       };
 
       const onScanError = (err: any) => {
-        // Suppress common "no QR detected" noise
         if (
           err?.name !== "NotFoundException" &&
           err?.name !== "NoMultiFormatReaderException"
@@ -464,8 +300,6 @@ export default function App() {
             qrbox: { width: 280, height: 280 },
             aspectRatio: 1.0,
             supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-            // Try to prefer back camera on mobile devices
-            // videoConstraints: { facingMode: "environment" },
             disableFlip: false,
           },
           false, // verbose = false
@@ -476,7 +310,7 @@ export default function App() {
         console.error("Scanner initialization error:", initError);
         message.error("Scanner failed to initialize");
       }
-    }, 200); // 200ms delay usually solves mounting timing issues
+    }, 200);
 
     return () => {
       clearTimeout(timer);

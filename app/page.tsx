@@ -19,9 +19,11 @@ export default function Home() {
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error);
+      console.log(data);
 
-      message.success(`Logged in as ${data.user.email}`);
-      router.push("/user");
+      message.success(`Logged in as ${data?.user?.email}`);
+      const path = data?.user?.role === "admin" ? "/admin" : "/user";
+      router.push(path);
     } catch (err: any) {
       message.error(err.message);
     } finally {
