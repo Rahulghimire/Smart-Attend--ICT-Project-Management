@@ -44,6 +44,12 @@ interface UserEntry {
   email: string;
   role: string;
 }
+interface Attendance {
+  id: number;
+  date: string;
+  subject: string;
+  status: "Present" | "Absent";
+}
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -53,32 +59,58 @@ export default function Home() {
   const [activeKey, setActiveKey] = useState("dashboard");
 
   const [users, setUsers] = useState<UserEntry[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const today = new Date().toDateString();
+  const todayRecords = attendance.filter(
+    (a) => new Date(a.date).toDateString() === today,
+  );
+  const presentToday = todayRecords.filter(
+    (a) => a.status === "Present",
+  ).length;
+
+  const absentToday = todayRecords.filter((a) => a.status === "Absent").length;
+
+  const attendanceRate =
+    todayRecords.length > 0
+      ? Math.round((presentToday / todayRecords.length) * 100)
+      : 0;
 
   const stats = {
-    totalUsers: users?.length,
-    presentToday: 96,
-    absentToday: 24,
-    attendanceRate: 80,
+    totalUsers: users.length,
+    presentToday,
+    absentToday,
+    attendanceRate,
   };
 
   const attendancePie = [
-    { name: "Present", value: stats.presentToday },
-    { name: "Absent", value: stats.absentToday },
+    { name: "Present", value: presentToday },
+    { name: "Absent", value: absentToday },
   ];
 
-  const weeklyData = [
-    { day: "Mon", present: 92 },
-    { day: "Tue", present: 95 },
-    { day: "Wed", present: 90 },
-    { day: "Thu", present: 98 },
-    { day: "Fri", present: 96 },
-  ];
+  const weeklyData = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+    (day, index) => {
+      const dayRecords = attendance.filter(
+        (a) => new Date(a.date).getDay() === index,
+      );
+      return {
+        day,
+        present: dayRecords.filter((a) => a.status === "Present").length,
+      };
+    },
+  );
 
   const COLORS = ["#22c55e", "#ef4444"];
 
   useEffect(() => {
-    if (activeKey !== "users") return;
+    const fetchAttendance = async () => {
+      const res = await fetch("/api/attendance");
+      const data = await res.json();
+      setAttendance(data);
+    };
+    fetchAttendance();
+  }, []);
 
+  useEffect(() => {
     const fetchUsers = async () => {
       try {
         const res = await fetch("/api/users");
@@ -117,24 +149,14 @@ export default function Home() {
     { title: "Time", dataIndex: "time" },
   ];
 
-  const data = [
-    {
-      key: 1,
-      name: "John Doe",
-      course: "MPIT",
-      subject: "ITC556",
-      status: "Present",
-      time: "09:02 AM",
-    },
-    {
-      key: 2,
-      name: "Jane Smith",
-      course: "MBA",
-      subject: "HR401",
-      status: "Absent",
-      time: "—",
-    },
-  ];
+  const data = attendance.map((a, i) => ({
+    key: i + 1,
+    name: "—",
+    course: "—",
+    subject: a.subject,
+    status: a.status,
+    time: new Date(a.date).toLocaleTimeString(),
+  }));
 
   return (
     <Layout className="min-h-screen bg-slate-50">
@@ -171,17 +193,16 @@ export default function Home() {
             Admin Dashboard
           </Title>
           <div className="space-x-2">
-            <Button icon={<Download />} type="default">
+            <Button icon={<Download />} type="default" size="large">
               Export Excel
             </Button>
-            <Button icon={<Download />} type="primary">
+            <Button icon={<Download />} type="primary" size="large">
               Export PDF
             </Button>
           </div>
         </Header>
 
         <Content className="p-6">
-          {/* KPI Cards */}
           <Row gutter={[16, 16]}>
             <Col xs={24} md={6}>
               <Card className="rounded-xl">
@@ -224,7 +245,6 @@ export default function Home() {
             </Col>
           </Row>
 
-          {/* Charts */}
           <Row gutter={[16, 16]} className="mt-6">
             <Col xs={24} md={12}>
               <Card
@@ -264,7 +284,6 @@ export default function Home() {
             </Col>
           </Row>
 
-          {/* Table */}
           <Card title="Live Attendance" className="rounded-xl mt-6">
             <Table
               columns={columns}

@@ -43,6 +43,9 @@ export default function App() {
 
   const [form] = Form.useForm();
 
+  const storedData = localStorage.getItem("user");
+  const user = storedData ? JSON.parse(storedData) : null;
+
   const [attendanceData, setAttendanceData] = useState<AttendanceEntry[]>([]);
 
   const [scanResult, setScanResult] = useState<string | null>(null);
@@ -155,6 +158,7 @@ export default function App() {
       }
 
       const payload = {
+        userId: user?.id,
         date: new Date().toISOString().split("T")[0],
         subject: `${selectedSubject} (${fullSubjectName})`,
         status: "Present",
@@ -190,6 +194,7 @@ export default function App() {
         const res = await fetch("/api/attendance");
         if (!res.ok) throw new Error("Failed to fetch attendance");
         const data = await res.json();
+        console.log("dfsafdsfd", data);
 
         const formatted: AttendanceEntry[] = data?.map(
           (item: any, index: number) => ({
@@ -250,6 +255,7 @@ export default function App() {
               ?.name || data.subject;
 
           const payload = {
+            userId: user?.id,
             date: new Date().toISOString().split("T")[0],
             subject: `${selectedSubject} (${fullSubjectName})`,
             status: "Present",
@@ -325,7 +331,7 @@ export default function App() {
 
   const handleRescan = () => {
     setScanResult(null);
-    scannerRef.current?.resume();
+    scannerRef?.current?.resume();
   };
 
   return (
@@ -453,9 +459,17 @@ export default function App() {
 
             {activeKey === "qr-attendance" && (
               <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
-                <Title level={2} className="text-indigo-800 mb-2 text-center">
-                  Generate QR for Attendance
-                </Title>
+                {qrValue ? (
+                  <div className="mt-4 text-center">
+                    <Text strong className="text-green-600">
+                      QR Generated Successfully ✅
+                    </Text>
+                  </div>
+                ) : (
+                  <Title level={2} className="text-indigo-800 mb-2 text-center">
+                    Generate QR for Attendance
+                  </Title>
+                )}
                 <div className="mb-6 flex justify-center">
                   {qrValue ? (
                     <QRCodeCanvas value={qrValue} size={200} level="H" />
@@ -496,13 +510,6 @@ export default function App() {
                       ))}
                   </Select>
                 </Form.Item>
-                {qrValue && (
-                  <div className="mt-4 text-center">
-                    <Text strong className="text-green-600">
-                      QR Generated Successfully ✅
-                    </Text>
-                  </div>
-                )}
               </Card>
             )}
 

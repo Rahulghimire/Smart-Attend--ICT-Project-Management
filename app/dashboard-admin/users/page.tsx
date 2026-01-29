@@ -28,17 +28,24 @@ export default function CreateUserPage() {
   };
 
   return (
-    <div className="p-6 mx-auto max-w-200">
+    <div className="p-6 mx-auto max-w-2xl">
       <Card title="Create User" className="shadow-sm">
         <Form layout="vertical" form={form} onFinish={onFinish}>
-          <Form.Item label="Full Name" name="name">
+          <Form.Item
+            label="Full Name"
+            name="name"
+            rules={[{ required: true, message: "Full name is required" }]}
+          >
             <Input placeholder="Enter full name" />
           </Form.Item>
 
           <Form.Item
             label="Email"
             name="email"
-            rules={[{ required: true, type: "email" }]}
+            rules={[
+              { required: true, message: "Email is required" },
+              { type: "email", message: "Enter a valid email" },
+            ]}
           >
             <Input placeholder="Enter email" />
           </Form.Item>
@@ -46,19 +53,57 @@ export default function CreateUserPage() {
           <Form.Item
             label="Password"
             name="password"
-            rules={[{ required: true, min: 6 }]}
+            rules={[
+              { required: true, message: "Password is required" },
+              { min: 6, message: "Minimum 6 characters" },
+            ]}
           >
             <Input.Password placeholder="Enter password" />
           </Form.Item>
 
-          <Form.Item label="Role" name="role" initialValue="user">
+          <Form.Item
+            label="Course"
+            name="course"
+            rules={[{ required: true, message: "Course is required" }]}
+          >
+            <Input placeholder="e.g. MPIT, MBA" />
+          </Form.Item>
+
+          <Form.Item
+            label="Student ID"
+            name="studentId"
+            rules={[{ required: true, message: "Student ID is required" }]}
+          >
+            <Input placeholder="Enter student ID" />
+          </Form.Item>
+
+          <Form.Item
+            label="Phone Number"
+            name="phone"
+            rules={[
+              { required: true, message: "Phone number is required" },
+              {
+                pattern: /^[0-9]{8,15}$/,
+                message: "Enter a valid phone number",
+              },
+            ]}
+          >
+            <Input placeholder="Enter phone number" />
+          </Form.Item>
+
+          <Form.Item
+            label="Role"
+            name="role"
+            initialValue="user"
+            rules={[{ required: true }]}
+          >
             <Select>
               <Select.Option value="admin">Admin</Select.Option>
               <Select.Option value="user">User</Select.Option>
             </Select>
           </Form.Item>
 
-          <Button type="primary" htmlType="submit" block>
+          <Button type="primary" htmlType="submit" block size="large">
             Create User
           </Button>
         </Form>

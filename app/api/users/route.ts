@@ -2,19 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "../../../generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
-const connectionString = `${process.env.DATABASE_URL}`;
-
-const adapter = new PrismaBetterSqlite3({ url: connectionString });
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL!,
+});
 
 const prisma = new PrismaClient({ adapter });
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, role } = await req.json();
+    const { name, email, password, role, course, studentId, phone } =
+      await req.json();
 
-    if (!email || !password) {
+    if (!email || !password || !course || !studentId) {
       return NextResponse.json(
-        { error: "Email and password required" },
+        { error: "Missing required fields" },
         { status: 400 },
       );
     }
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
         email,
         password,
         role: role || "user",
+        course,
+        studentId,
+        phone,
       },
     });
 
@@ -52,6 +56,9 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
+        course: true,
+        studentId: true,
+        phone: true,
       },
       orderBy: { id: "desc" },
     });

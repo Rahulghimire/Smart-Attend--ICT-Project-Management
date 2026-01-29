@@ -8,11 +8,15 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  name     String?
-  password String
-  role     String  @default("user")
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  name        String?
+  password    String
+  role        String       @default("user")
+  course      String
+  studentId   String       @unique
+  phone       String?
+  attendances Attendance[]
 }
 
 
@@ -23,4 +27,7 @@ model Attendance {
   status    String
   method    String
   createdAt DateTime @default(now())
+  userId Int?       
+  user   User? @relation(fields: [userId], references: [id])
 }
+
