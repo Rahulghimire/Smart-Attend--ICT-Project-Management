@@ -460,7 +460,7 @@ export default function App() {
             {activeKey === "qr-attendance" && (
               <Card className="max-w-2xl mx-auto shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
                 {qrValue ? (
-                  <div className="mt-4 text-center">
+                  <div className="mt-4 text-center mb-3">
                     <Text strong className="text-green-600">
                       QR Generated Successfully ✅
                     </Text>
