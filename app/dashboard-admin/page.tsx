@@ -160,7 +160,6 @@ export default function Home() {
 
   return (
     <Layout className="min-h-screen bg-slate-50">
-      {/* Sidebar */}
       <Sider width={240} className="!bg-white">
         <div className="h-16 flex items-center justify-center font-bold text-lg">
           SmartAttend
@@ -181,6 +180,8 @@ export default function Home() {
           items={[
             { key: "dashboard", icon: <LayoutDashboard />, label: "Dashboard" },
             { key: "users", icon: <Users />, label: "Users" },
+            { key: "classes", icon: <Users />, label: "Classes" },
+
             // { key: "reports", icon: <FileText />, label: "Reports" },
           ]}
         />

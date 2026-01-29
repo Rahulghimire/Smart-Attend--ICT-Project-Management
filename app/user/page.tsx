@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Layout,
   Menu,
@@ -42,6 +42,7 @@ export default function App() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
   const [form] = Form.useForm();
+  const today = new Date().toISOString().split("T")[0];
 
   const storedData = localStorage.getItem("user");
   const user = storedData ? JSON.parse(storedData) : null;
@@ -99,13 +100,19 @@ export default function App() {
     { title: "Method", dataIndex: "method", key: "method" },
   ];
 
-  const overallPercentage = attendanceData.length
-    ? Math.round(
-        (attendanceData.filter((a) => a.status === "Present").length /
-          attendanceData.length) *
-          100,
-      )
-    : 0;
+  const [overallPercentage, setOverallPercentage] = useState(0);
+
+  useEffect(() => {
+    if (!attendanceData || attendanceData?.length === 0) return;
+    const totalSessions = attendanceData.length;
+    const presentCount = attendanceData.reduce((count, entry) => {
+      if (entry.status && String(entry.status).toLowerCase() === "present") {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+    setOverallPercentage(Math.round((presentCount / totalSessions) * 100));
+  }, [attendanceData]);
 
   const menuItems = [
     { key: "home", label: "Home", icon: <Home className="w-5 h-5" /> },
@@ -187,14 +194,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (activeKey !== "history") return;
+    // if (activeKey !== "history") return;
 
     const fetchAttendance = async () => {
       try {
         const res = await fetch("/api/attendance");
         if (!res.ok) throw new Error("Failed to fetch attendance");
         const data = await res.json();
-        console.log("dfsafdsfd", data);
 
         const formatted: AttendanceEntry[] = data?.map(
           (item: any, index: number) => ({
@@ -329,6 +335,11 @@ export default function App() {
     };
   }, [activeKey]);
 
+  const classesToday = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    return attendanceData?.filter((entry) => entry.date === today).length;
+  }, [attendanceData]);
+
   const handleRescan = () => {
     setScanResult(null);
     scannerRef?.current?.resume();
@@ -367,7 +378,7 @@ export default function App() {
           <Content className="max-w-7xl mx-auto p-6 md:p-8">
             {activeKey === "home" && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-3">
                   <Card className="shadow-xl hover:shadow-2xl transition-shadow bg-gradient-to-br from-green-500 to-teal-600 text-white border-0 rounded-2xl">
                     <div className="flex items-center justify-between">
                       <div>
@@ -385,7 +396,7 @@ export default function App() {
                     <div className="flex items-center justify-between">
                       <div>
                         <Text className="text-white text-5xl font-bold">
-                          4/5
+                          {classesToday}/{attendanceData.length || 1}
                         </Text>
                         <Title level={4} className="text-white mb-0 !text-xl">
                           Classes Today
@@ -406,6 +417,21 @@ export default function App() {
                       </div>
                       <FileText className="w-20 h-20 opacity-80" />
                     </div>
+                  </Card>
+                </div>
+                <div className="mb-3">
+                  <Card className="shadow-2xl bg-white/95 backdrop-blur-lg rounded-2xl border-0 p-6">
+                    <Title level={2} className="text-indigo-800 mb-2">
+                      Your Attendance History
+                    </Title>
+                    <Table
+                      columns={columns}
+                      scroll={{
+                        x: "60vw",
+                      }}
+                      dataSource={attendanceData}
+                      pagination={{ pageSize: 10 }}
+                    />
                   </Card>
                 </div>
                 <Card className="shadow-2xl bg-white/90 backdrop-blur-lg rounded-2xl border-0">

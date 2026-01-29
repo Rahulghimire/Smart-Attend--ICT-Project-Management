@@ -19,6 +19,15 @@ model User {
   attendances Attendance[]
 }
 
+model ClassToday {
+  id          Int      @id @default(autoincrement())
+  classDate   DateTime
+  day         String   
+  noOfClasses Int
+  createdAt   DateTime @default(now())
+}
+
+
 
 model Attendance {
   id        Int      @id @default(autoincrement())
