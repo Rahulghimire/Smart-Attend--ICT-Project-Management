@@ -344,6 +344,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { LogoutOutlined } from "@ant-design/icons";
 
 interface UserEntry {
   key: number;
@@ -546,6 +547,16 @@ export default function Home() {
     }
   };
 
+  const handleLogout = () => {
+    message.loading("Logging out...", 0.8);
+    setTimeout(() => {
+      message.success("You have been logged out");
+      router.push("/");
+      router.refresh();
+    }, 800);
+    localStorage.removeItem("user");
+  };
+
   return (
     <Layout className="min-h-screen bg-slate-50">
       <Sider width={240} className="!bg-white">
@@ -593,6 +604,14 @@ export default function Home() {
               onClick={exportToPDF}
             >
               Export PDF
+            </Button>
+            <Button
+              icon={<LogoutOutlined />}
+              type="primary"
+              size="large"
+              onClick={handleLogout}
+            >
+              Logout
             </Button>
           </div>
         </Header>

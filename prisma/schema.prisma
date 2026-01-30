@@ -38,7 +38,11 @@ model Attendance {
   createdAt DateTime @default(now())
   userId Int?       
   user   User? @relation(fields: [userId], references: [id])
+  @@unique([userId, date, subject])
+
 }
+
+
 
 model CourseStats {
   id           Int    @id @default(autoincrement())

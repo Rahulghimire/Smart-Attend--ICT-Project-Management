@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
+import { useRouter } from "next/navigation";
+import { LogoutOutlined } from "@ant-design/icons";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
@@ -58,6 +60,8 @@ export default function App() {
     { name: "MBA", code: "MBA" },
     { name: "BBA", code: "BBA" },
   ];
+
+  const router = useRouter();
 
   const subjectsByCourse: Record<string, { code: string; name: string }[]> = {
     MPIT: [
@@ -135,6 +139,16 @@ export default function App() {
     setOverallPercentage(Math.round((presentCount / totalSessions) * 100));
   }, [attendanceData]);
 
+  const handleLogout = () => {
+    message.loading("Logging out...", 0.8);
+
+    setTimeout(() => {
+      message.success("You have been logged out");
+      router.push("/");
+    }, 800);
+    localStorage.removeItem("user");
+  };
+
   const menuItems = [
     { key: "home", label: "Home", icon: <Home className="w-5 h-5" /> },
     {
@@ -156,6 +170,13 @@ export default function App() {
       key: "scan-qr",
       label: "Scan QR Code",
       icon: <QrCode className="w-5 h-5" />,
+    },
+    {
+      key: "logout",
+      label: "Logout",
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: handleLogout,
     },
   ];
 
