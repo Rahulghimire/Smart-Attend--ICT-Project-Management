@@ -32,7 +32,8 @@ export default function LoginPage() {
 
       message.success(`Welcome back, ${data.user.email.split("@")[0]}!`);
 
-      const redirectPath = data?.user?.role === "admin" ? "/admin" : "/user";
+      const redirectPath =
+        data?.user?.role === "admin" ? "/dashboard-admin" : "/user";
 
       router.push(redirectPath);
     } catch (err: any) {

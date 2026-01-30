@@ -13,6 +13,7 @@ import {
   Divider,
   Tag,
   message,
+  Input,
 } from "antd";
 import {
   QrCode,
@@ -25,7 +26,7 @@ import {
 import { QRCodeCanvas } from "qrcode.react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { useRouter } from "next/navigation";
-import { LogoutOutlined } from "@ant-design/icons";
+import { CalendarOutlined, LogoutOutlined } from "@ant-design/icons";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
@@ -43,6 +44,7 @@ export default function App() {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [classesToday, setClassesToday] = useState<number>(0);
+  const [searchDate, setSearchDate] = useState("");
 
   const [form] = Form.useForm();
 
@@ -83,6 +85,12 @@ export default function App() {
       { code: "ECO201", name: "Business Economics" },
     ],
   };
+
+  const filteredAttendance = attendanceData.filter((item) =>
+    searchDate
+      ? new Date(item.date).toISOString().slice(0, 10).includes(searchDate)
+      : true,
+  );
 
   useEffect(() => {
     const fetchClassesToday = async () => {
@@ -461,12 +469,20 @@ export default function App() {
                     <Title level={2} className="text-indigo-800 mb-2">
                       Your Attendance History
                     </Title>
+                    <Form.Item layout="vertical" label="Search by Date:">
+                      <Input
+                        type="date"
+                        className="mb-4 max-w-xs"
+                        onChange={(e: any) => setSearchDate(e.target.value)}
+                      />
+                    </Form.Item>
+
                     <Table
                       columns={columns}
                       scroll={{
                         x: "60vw",
                       }}
-                      dataSource={attendanceData}
+                      dataSource={filteredAttendance}
                       pagination={{ pageSize: 10 }}
                     />
                   </Card>
@@ -628,12 +644,19 @@ export default function App() {
                 <Title level={2} className="text-indigo-800 mb-4">
                   Attendance History
                 </Title>
+                <Form.Item layout="vertical" label="Search by Date:">
+                  <Input
+                    type="date"
+                    className="mb-4 max-w-xs"
+                    onChange={(e: any) => setSearchDate(e.target.value)}
+                  />
+                </Form.Item>
                 <Table
                   columns={columns}
                   scroll={{
                     x: "60vw",
                   }}
-                  dataSource={attendanceData}
+                  dataSource={filteredAttendance}
                   pagination={{ pageSize: 10 }}
                 />
               </Card>

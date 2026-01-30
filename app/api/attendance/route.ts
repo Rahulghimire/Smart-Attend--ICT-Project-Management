@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     if (status === "Present" && user?.email) {
       await resend.emails.send({
         from: "SmartAttend <onboarding@resend.dev>",
-        to: user.email,
+        to: user?.email,
         subject: "Attendance Marked ✅",
         html: `
           <p>Hi ${user.name ?? "Student"},</p>

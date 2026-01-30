@@ -318,6 +318,8 @@ import {
   Typography,
   Button,
   message,
+  Form,
+  Input,
 } from "antd";
 import {
   LayoutDashboard,
@@ -370,7 +372,7 @@ export default function Home() {
 
   const [users, setUsers] = useState<UserEntry[]>([]);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
-  const tableRef = useRef<HTMLDivElement>(null);
+  const [searchDate, setSearchDate] = useState("");
 
   const today = new Date().toDateString();
   const todayRecords = attendance.filter(
@@ -397,6 +399,12 @@ export default function Home() {
     { name: "Present", value: presentToday },
     { name: "Absent", value: absentToday },
   ];
+
+  const filteredAttendance = attendance?.filter((item) =>
+    searchDate
+      ? new Date(item.date).toISOString().slice(0, 10).includes(searchDate)
+      : true,
+  );
 
   const weeklyData = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
     (day, index) => {
@@ -604,6 +612,7 @@ export default function Home() {
               Export PDF
             </Button>
             <Button
+              danger
               icon={<LogoutOutlined />}
               type="primary"
               size="large"
@@ -697,9 +706,14 @@ export default function Home() {
           </Row>
 
           <Card title="Live Attendance" className="rounded-xl mt-6">
+            <Input
+              type="date"
+              className="!mb-2 max-w-xs"
+              onChange={(e: any) => setSearchDate(e.target.value)}
+            />
             <Table
               columns={columns}
-              dataSource={tableData}
+              dataSource={filteredAttendance}
               pagination={{ pageSize: 5 }}
             />
           </Card>
