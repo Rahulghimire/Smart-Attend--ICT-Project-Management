@@ -471,7 +471,6 @@ export default function Home() {
     { title: "Time", dataIndex: "time", key: "time" },
   ];
 
-  // Export to Excel (.xlsx)
   const exportToExcel = () => {
     try {
       const worksheet = XLSX.utils.json_to_sheet(tableData);
@@ -505,7 +504,6 @@ export default function Home() {
     }
   };
 
-  // Export to PDF using jsPDF + autoTable
   const exportToPDF = () => {
     try {
       const doc = new jsPDF("landscape");
