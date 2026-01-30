@@ -40,9 +40,9 @@ export default function App() {
   const [activeKey, setActiveKey] = useState("home");
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [classesToday, setClassesToday] = useState<number>(0);
 
   const [form] = Form.useForm();
-  const today = new Date().toISOString().split("T")[0];
 
   const storedData = localStorage.getItem("user");
   const user = storedData ? JSON.parse(storedData) : null;
@@ -79,6 +79,27 @@ export default function App() {
       { code: "ECO201", name: "Business Economics" },
     ],
   };
+
+  useEffect(() => {
+    const fetchClassesToday = async () => {
+      try {
+        const res = await fetch("/api/classes");
+        if (!res.ok) throw new Error("Failed to fetch classes today");
+        const data = await res.json();
+
+        const total = data.reduce(
+          (sum: number, item: any) => sum + Number(item?.noOfClasses),
+          0,
+        );
+        setClassesToday(total);
+      } catch (err) {
+        console.error(err);
+        message.error("Could not load today's classes");
+      }
+    };
+
+    fetchClassesToday();
+  }, []);
 
   const columns = [
     {
@@ -335,11 +356,6 @@ export default function App() {
     };
   }, [activeKey]);
 
-  const classesToday = useMemo(() => {
-    const today = new Date().toISOString().split("T")[0];
-    return attendanceData?.filter((entry) => entry.date === today).length;
-  }, [attendanceData]);
-
   const handleRescan = () => {
     setScanResult(null);
     scannerRef?.current?.resume();
@@ -396,10 +412,10 @@ export default function App() {
                     <div className="flex items-center justify-between">
                       <div>
                         <Text className="text-white text-5xl font-bold">
-                          {classesToday}/{attendanceData.length || 1}
+                          {classesToday || 0}
                         </Text>
                         <Title level={4} className="text-white mb-0 !text-xl">
-                          Classes Today
+                          Class Today
                         </Title>
                       </div>
                       <Users className="w-20 h-20 opacity-80" />

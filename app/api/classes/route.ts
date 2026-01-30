@@ -34,20 +34,38 @@ export async function POST(req: Request) {
     );
   }
 }
-
 export async function GET() {
   try {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
+    const nowInMelbourne = new Date().toLocaleString("en-US", {
+      timeZone: "Australia/Melbourne",
+    });
+    const melbourneDate = new Date(nowInMelbourne);
 
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
+    const startMelbourne = new Date(
+      melbourneDate.getFullYear(),
+      melbourneDate.getMonth(),
+      melbourneDate.getDate(),
+      0,
+      0,
+      0,
+      0,
+    );
+
+    const endMelbourne = new Date(
+      melbourneDate.getFullYear(),
+      melbourneDate.getMonth(),
+      melbourneDate.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
 
     const records = await prisma.classToday.findMany({
       where: {
         classDate: {
-          gte: start,
-          lte: end,
+          gte: startMelbourne,
+          lte: endMelbourne,
         },
       },
       orderBy: { classDate: "asc" },
@@ -56,6 +74,9 @@ export async function GET() {
     return NextResponse.json(records);
   } catch (error) {
     console.error("GET /api/class-today error:", error);
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch today's classes" },
+      { status: 500 },
+    );
   }
 }
